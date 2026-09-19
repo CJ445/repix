@@ -89,3 +89,10 @@ Open items: the pinned-core benchmark harness has not been re-run with Large, so
 `benchmarks/repix-model-comparison.pdf`, its `make_report.py` text and the colorization entries in
 `benchmarks/results/` still describe DDColor-Tiny (flagged in `benchmarks/README.md`). Confirm the
 export's license before distributing.
+
+### Resize units (px, in, cm, mm)
+Resize accepts pixels or physical units. Images carry no reliable physical size and the app never
+writes DPI metadata (canvas encoding stores pixels only), so physical units need an explicit
+resolution: it defaults to 300 DPI (print) and is editable. The pixel size is the single source of
+truth; the unit and DPI only change how it is displayed and typed, and results are always whole
+pixels. As before, sizes larger than the current image are rejected (use Upscale).

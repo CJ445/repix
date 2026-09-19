@@ -14,7 +14,7 @@ React · TypeScript · FastAPI · ONNX Runtime · Docker
 
 - Drag-and-drop image upload with instant local preview
 - Interactive crop (free, 1:1, 4:3, 3:2, 16:9)
-- Resize with locked/unlocked aspect ratio and percentage presets
+- Resize with locked/unlocked aspect ratio, percentage presets, and sizes in px, in, cm or mm (physical units convert to pixels at an adjustable DPI, default 300)
 - One-click Grayscale (next to Colorize Image), applied in the browser and undoable
 - Grayscale-to-color photo colorization
 - AI upscaling at 2×
