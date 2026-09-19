@@ -1,0 +1,779 @@
+[
+ {
+  "name": "quality_up",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 105.75575923919678,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7447025910005323
+  },
+  "jobs": [
+   {
+    "id": "astronaut_clean_x4",
+    "task": "upscale4",
+    "input_size": [
+     128,
+     128
+    ],
+    "iters": [
+     {
+      "wall_s": 2.8737747619998117,
+      "cpu_s": 5.610848,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 386.73828125
+     }
+    ],
+    "output_size": [
+     512,
+     512
+    ]
+   },
+   {
+    "id": "astronaut_clean_x2",
+    "task": "upscale2",
+    "input_size": [
+     256,
+     256
+    ],
+    "iters": [
+     {
+      "wall_s": 2.736965500000224,
+      "cpu_s": 5.392286,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 413.0234375
+     }
+    ],
+    "output_size": [
+     512,
+     512
+    ]
+   },
+   {
+    "id": "astronaut_degraded_x4",
+    "task": "upscale4",
+    "input_size": [
+     128,
+     128
+    ],
+    "iters": [
+     {
+      "wall_s": 2.7365702689994578,
+      "cpu_s": 5.388945,
+      "throttled_periods": 1,
+      "throttled_s": 0.00059,
+      "mem_peak_mb": 413.4921875
+     }
+    ],
+    "output_size": [
+     512,
+     512
+    ]
+   },
+   {
+    "id": "coffee_clean_x4",
+    "task": "upscale4",
+    "input_size": [
+     150,
+     100
+    ],
+    "iters": [
+     {
+      "wall_s": 2.433185704000607,
+      "cpu_s": 4.79692,
+      "throttled_periods": 1,
+      "throttled_s": 4e-06,
+      "mem_peak_mb": 403.0
+     }
+    ],
+    "output_size": [
+     600,
+     400
+    ]
+   },
+   {
+    "id": "coffee_clean_x2",
+    "task": "upscale2",
+    "input_size": [
+     300,
+     200
+    ],
+    "iters": [
+     {
+      "wall_s": 2.6659885990002294,
+      "cpu_s": 5.248689,
+      "throttled_periods": 3,
+      "throttled_s": 0.001417,
+      "mem_peak_mb": 392.51171875
+     }
+    ],
+    "output_size": [
+     600,
+     400
+    ]
+   },
+   {
+    "id": "coffee_degraded_x4",
+    "task": "upscale4",
+    "input_size": [
+     150,
+     100
+    ],
+    "iters": [
+     {
+      "wall_s": 2.4571730659999957,
+      "cpu_s": 4.844159,
+      "throttled_periods": 1,
+      "throttled_s": 0.00057,
+      "mem_peak_mb": 403.7578125
+     }
+    ],
+    "output_size": [
+     600,
+     400
+    ]
+   },
+   {
+    "id": "chelsea_clean_x4",
+    "task": "upscale4",
+    "input_size": [
+     112,
+     75
+    ],
+    "iters": [
+     {
+      "wall_s": 1.3152950060002695,
+      "cpu_s": 2.57253,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 352.515625
+     }
+    ],
+    "output_size": [
+     448,
+     300
+    ]
+   },
+   {
+    "id": "chelsea_clean_x2",
+    "task": "upscale2",
+    "input_size": [
+     224,
+     150
+    ],
+    "iters": [
+     {
+      "wall_s": 1.3150285960000474,
+      "cpu_s": 2.567668,
+      "throttled_periods": 1,
+      "throttled_s": 0.000589,
+      "mem_peak_mb": 352.7890625
+     }
+    ],
+    "output_size": [
+     448,
+     300
+    ]
+   },
+   {
+    "id": "chelsea_degraded_x4",
+    "task": "upscale4",
+    "input_size": [
+     112,
+     75
+    ],
+    "iters": [
+     {
+      "wall_s": 1.3139019029995325,
+      "cpu_s": 2.568818,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 353.05859375
+     }
+    ],
+    "output_size": [
+     448,
+     300
+    ]
+   },
+   {
+    "id": "showcase_astronaut_x4",
+    "task": "upscale4",
+    "input_size": [
+     512,
+     512
+    ],
+    "iters": [
+     {
+      "wall_s": 71.02138416999969,
+      "cpu_s": 134.339371,
+      "throttled_periods": 3,
+      "throttled_s": 0.002739,
+      "mem_peak_mb": 881.2890625
+     }
+    ],
+    "output_size": [
+     2048,
+     2048
+    ]
+   },
+   {
+    "id": "showcase_coffee_x2",
+    "task": "upscale2",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 11.722125979000339,
+      "cpu_s": 23.159992,
+      "throttled_periods": 8,
+      "throttled_s": 0.004708,
+      "mem_peak_mb": 487.91015625
+     }
+    ],
+    "output_size": [
+     1200,
+     800
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 881.2890625,
+  "maxrss_mb": 918.5703125
+ },
+ {
+  "name": "quality_col",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 10.488303899765015,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "g.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Add node '/decoder/color_decoder/pe_layer_1/Add_1'\u001b[m\n\u001b[0;93m2026-09-19 13:38:08.451037769 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Add node '/decoder/color_decoder/pe_layer_1/Add'\u001b[m\n\u001b[0;93m2026-09-19 13:38:08.451053037 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Add node '/decoder/color_decoder/pe_layer/Add_1'\u001b[m\n\u001b[0;93m2026-09-19 13:38:08.451066322 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Add node '/decoder/color_decoder/pe_layer/Add'\u001b[m\n\u001b[0;93m2026-09-19 13:38:08.451093553 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Tile node '/decoder/color_decoder/Tile_1'\u001b[m\n\u001b[0;93m2026-09-19 13:38:08.451109513 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Tile node '/decoder/color_decoder/Tile'\u001b[m\n\u001b[0;93m2026-09-19 13:38:08.451300532 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold MatMul node '/decoder/last_shuf/conv/MatMul'\u001b[m\n\u001b[0;93m2026-09-19 13:38:08.451321561 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold MatMul node '/refine_net/refine_net.0/MatMul'\u001b[m\n",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "colorize": 0.3811443690001397
+  },
+  "jobs": [
+   {
+    "id": "astronaut_colorize",
+    "task": "colorize",
+    "input_size": [
+     512,
+     512
+    ],
+    "iters": [
+     {
+      "wall_s": 2.3949542230002407,
+      "cpu_s": 3.695039,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1409.05859375
+     }
+    ],
+    "output_size": [
+     512,
+     512
+    ]
+   },
+   {
+    "id": "coffee_colorize",
+    "task": "colorize",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 2.3192639010003404,
+      "cpu_s": 3.62979,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1399.36328125
+     }
+    ],
+    "output_size": [
+     600,
+     400
+    ]
+   },
+   {
+    "id": "chelsea_colorize",
+    "task": "colorize",
+    "input_size": [
+     448,
+     300
+    ],
+    "iters": [
+     {
+      "wall_s": 2.301486065000063,
+      "cpu_s": 3.612112,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1410.34375
+     }
+    ],
+    "output_size": [
+     448,
+     300
+    ]
+   },
+   {
+    "id": "bw_flower_colorize",
+    "task": "colorize",
+    "input_size": [
+     1140,
+     855
+    ],
+    "iters": [
+     {
+      "wall_s": 2.232263103999685,
+      "cpu_s": 3.52386,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1409.15234375
+     }
+    ],
+    "output_size": [
+     1140,
+     855
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1440.15234375,
+  "maxrss_mb": 1348.38671875
+ },
+ {
+  "name": "quality_int8",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": "/work/candidates/realesrgan_x4plus_int8_qdq.onnx",
+  "container_wall_s": 59.561546325683594,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus_int8_qdq.onnx"
+  },
+  "model_load_s": {
+   "upscale": 1.2279072139999698
+  },
+  "jobs": [
+   {
+    "id": "astronaut_clean_x4",
+    "task": "upscale4",
+    "input_size": [
+     128,
+     128
+    ],
+    "iters": [
+     {
+      "wall_s": 1.9114030699993236,
+      "cpu_s": 3.077828,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 311.80078125
+     }
+    ],
+    "output_size": [
+     512,
+     512
+    ]
+   },
+   {
+    "id": "astronaut_degraded_x4",
+    "task": "upscale4",
+    "input_size": [
+     128,
+     128
+    ],
+    "iters": [
+     {
+      "wall_s": 1.7971439259999897,
+      "cpu_s": 2.981469,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 312.10546875
+     }
+    ],
+    "output_size": [
+     512,
+     512
+    ]
+   },
+   {
+    "id": "coffee_clean_x4",
+    "task": "upscale4",
+    "input_size": [
+     150,
+     100
+    ],
+    "iters": [
+     {
+      "wall_s": 1.394164051000189,
+      "cpu_s": 2.428914,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 330.69140625
+     }
+    ],
+    "output_size": [
+     600,
+     400
+    ]
+   },
+   {
+    "id": "coffee_degraded_x4",
+    "task": "upscale4",
+    "input_size": [
+     150,
+     100
+    ],
+    "iters": [
+     {
+      "wall_s": 1.4168783250006527,
+      "cpu_s": 2.473617,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 331.14453125
+     }
+    ],
+    "output_size": [
+     600,
+     400
+    ]
+   },
+   {
+    "id": "chelsea_clean_x4",
+    "task": "upscale4",
+    "input_size": [
+     112,
+     75
+    ],
+    "iters": [
+     {
+      "wall_s": 0.6981429400002526,
+      "cpu_s": 1.231292,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 279.73046875
+     }
+    ],
+    "output_size": [
+     448,
+     300
+    ]
+   },
+   {
+    "id": "chelsea_degraded_x4",
+    "task": "upscale4",
+    "input_size": [
+     112,
+     75
+    ],
+    "iters": [
+     {
+      "wall_s": 0.6970597990002716,
+      "cpu_s": 1.231301,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 279.95703125
+     }
+    ],
+    "output_size": [
+     448,
+     300
+    ]
+   },
+   {
+    "id": "showcase_astronaut_x4",
+    "task": "upscale4",
+    "input_size": [
+     512,
+     512
+    ],
+    "iters": [
+     {
+      "wall_s": 48.45394357799978,
+      "cpu_s": 79.439825,
+      "throttled_periods": 5,
+      "throttled_s": 0.003996,
+      "mem_peak_mb": 884.19140625
+     }
+    ],
+    "output_size": [
+     2048,
+     2048
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 884.19140625,
+  "maxrss_mb": 923.69921875
+ },
+ {
+  "name": "quality_general_v3",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": "/work/candidates/realesr_general_x4v3.onnx",
+  "container_wall_s": 7.218716859817505,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesr_general_x4v3.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.3951127489999635
+  },
+  "jobs": [
+   {
+    "id": "astronaut_clean_x4",
+    "task": "upscale4",
+    "input_size": [
+     128,
+     128
+    ],
+    "iters": [
+     {
+      "wall_s": 0.2681693329996051,
+      "cpu_s": 0.498429,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 198.30078125
+     }
+    ],
+    "output_size": [
+     512,
+     512
+    ]
+   },
+   {
+    "id": "astronaut_degraded_x4",
+    "task": "upscale4",
+    "input_size": [
+     128,
+     128
+    ],
+    "iters": [
+     {
+      "wall_s": 0.2665798709995215,
+      "cpu_s": 0.497567,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 198.70703125
+     }
+    ],
+    "output_size": [
+     512,
+     512
+    ]
+   },
+   {
+    "id": "coffee_clean_x4",
+    "task": "upscale4",
+    "input_size": [
+     150,
+     100
+    ],
+    "iters": [
+     {
+      "wall_s": 0.1552871200001391,
+      "cpu_s": 0.300588,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 197.71484375
+     }
+    ],
+    "output_size": [
+     600,
+     400
+    ]
+   },
+   {
+    "id": "coffee_degraded_x4",
+    "task": "upscale4",
+    "input_size": [
+     150,
+     100
+    ],
+    "iters": [
+     {
+      "wall_s": 0.15803283100012777,
+      "cpu_s": 0.305073,
+      "throttled_periods": 1,
+      "throttled_s": 8e-05,
+      "mem_peak_mb": 197.94921875
+     }
+    ],
+    "output_size": [
+     600,
+     400
+    ]
+   },
+   {
+    "id": "chelsea_clean_x4",
+    "task": "upscale4",
+    "input_size": [
+     112,
+     75
+    ],
+    "iters": [
+     {
+      "wall_s": 0.08268097400014085,
+      "cpu_s": 0.159585,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 186.43359375
+     }
+    ],
+    "output_size": [
+     448,
+     300
+    ]
+   },
+   {
+    "id": "chelsea_degraded_x4",
+    "task": "upscale4",
+    "input_size": [
+     112,
+     75
+    ],
+    "iters": [
+     {
+      "wall_s": 0.0820270479998726,
+      "cpu_s": 0.158586,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 186.6796875
+     }
+    ],
+    "output_size": [
+     448,
+     300
+    ]
+   },
+   {
+    "id": "showcase_astronaut_x4",
+    "task": "upscale4",
+    "input_size": [
+     512,
+     512
+    ],
+    "iters": [
+     {
+      "wall_s": 4.182315658999869,
+      "cpu_s": 7.970328,
+      "throttled_periods": 3,
+      "throttled_s": 0.00029,
+      "mem_peak_mb": 359.21875
+     }
+    ],
+    "output_size": [
+     2048,
+     2048
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 359.21875,
+  "maxrss_mb": 400.2109375
+ }
+]

@@ -1,0 +1,142 @@
+[
+ {
+  "name": "cand_int8",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": "/work/candidates/realesrgan_x4plus_int8_qdq.onnx",
+  "container_wall_s": 82.67166209220886,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus_int8_qdq.onnx"
+  },
+  "model_load_s": {
+   "upscale": 1.2402090579998912
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 39.840019742999175,
+      "cpu_s": 65.556798,
+      "throttled_periods": 1,
+      "throttled_s": 0.001227,
+      "mem_peak_mb": 895.8671875
+     },
+     {
+      "wall_s": 40.13581613600036,
+      "cpu_s": 66.297785,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 921.421875
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 921.421875,
+  "maxrss_mb": 896.26171875
+ },
+ {
+  "name": "cand_general_v3",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": "/work/candidates/realesr_general_x4v3.onnx",
+  "container_wall_s": 9.475748300552368,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesr_general_x4v3.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.40056279199961864
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 4.0774544430005335,
+      "cpu_s": 7.744275,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 305.0546875
+     },
+     {
+      "wall_s": 3.7093871719998788,
+      "cpu_s": 7.127948,
+      "throttled_periods": 3,
+      "throttled_s": 0.002933,
+      "mem_peak_mb": 331.5234375
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 348.65234375,
+  "maxrss_mb": 386.01953125
+ }
+]

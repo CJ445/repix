@@ -1,0 +1,128 @@
+[
+ {
+  "name": "big_arena_on",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "arena_on",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 213.2170386314392,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "arena_on",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7030350059994817
+  },
+  "jobs": [
+   {
+    "id": "x4_1024",
+    "task": "upscale4",
+    "input_size": [
+     1024,
+     1024
+    ],
+    "iters": [
+     {
+      "wall_s": 208.02327191699987,
+      "cpu_s": 413.765813,
+      "throttled_periods": 260,
+      "throttled_s": 0.090241,
+      "mem_peak_mb": 3261.67578125
+     }
+    ],
+    "output_size": [
+     4096,
+     4096
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 3369.92578125,
+  "maxrss_mb": 3405.69921875
+ },
+ {
+  "name": "big_fixed_arena_shrink",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "fixed_arena_shrink",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 238.99197435379028,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "fixed_arena_shrink",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7623173009997117
+  },
+  "jobs": [
+   {
+    "id": "x4_1024",
+    "task": "upscale4",
+    "input_size": [
+     1024,
+     1024
+    ],
+    "iters": [
+     {
+      "wall_s": 233.8585283399998,
+      "cpu_s": 462.996227,
+      "throttled_periods": 282,
+      "throttled_s": 0.126622,
+      "mem_peak_mb": 1386.12890625
+     }
+    ],
+    "output_size": [
+     4096,
+     4096
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1386.12890625,
+  "maxrss_mb": 1425.84765625
+ }
+]

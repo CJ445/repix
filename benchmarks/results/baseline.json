@@ -1,0 +1,343 @@
+[
+ {
+  "name": "base_main",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 207.61932229995728,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "g.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Add node '/decoder/color_decoder/pe_layer_1/Add_1'\u001b[m\n\u001b[0;93m2026-09-19 12:56:34.649379373 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Add node '/decoder/color_decoder/pe_layer_1/Add'\u001b[m\n\u001b[0;93m2026-09-19 12:56:34.649393239 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Add node '/decoder/color_decoder/pe_layer/Add_1'\u001b[m\n\u001b[0;93m2026-09-19 12:56:34.649405171 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Add node '/decoder/color_decoder/pe_layer/Add'\u001b[m\n\u001b[0;93m2026-09-19 12:56:34.649438393 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Tile node '/decoder/color_decoder/Tile_1'\u001b[m\n\u001b[0;93m2026-09-19 12:56:34.649451217 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold Tile node '/decoder/color_decoder/Tile'\u001b[m\n\u001b[0;93m2026-09-19 12:56:34.649634040 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold MatMul node '/decoder/last_shuf/conv/MatMul'\u001b[m\n\u001b[0;93m2026-09-19 12:56:34.649649900 [W:onnxruntime:, constant_folding.cc:268 ApplyImpl] Could not find a CPU kernel and hence can't constant fold MatMul node '/refine_net/refine_net.0/MatMul'\u001b[m\n",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "colorize": 0.23379452600011064,
+   "upscale": 0.6672050700001364
+  },
+  "jobs": [
+   {
+    "id": "colorize_512",
+    "task": "colorize",
+    "input_size": [
+     512,
+     512
+    ],
+    "iters": [
+     {
+      "wall_s": 2.3393913340000836,
+      "cpu_s": 3.607995,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1430.4609375
+     },
+     {
+      "wall_s": 2.2152126440000757,
+      "cpu_s": 3.502117,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1434.37890625
+     },
+     {
+      "wall_s": 2.221387143999891,
+      "cpu_s": 3.494249,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1410.890625
+     }
+    ],
+    "output_size": [
+     512,
+     512
+    ]
+   },
+   {
+    "id": "colorize_1024",
+    "task": "colorize",
+    "input_size": [
+     1024,
+     1024
+    ],
+    "iters": [
+     {
+      "wall_s": 2.257168017999902,
+      "cpu_s": 3.581195,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1463.05859375
+     },
+     {
+      "wall_s": 2.210447355000042,
+      "cpu_s": 3.487385,
+      "throttled_periods": 0,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1452.8203125
+     }
+    ],
+    "output_size": [
+     1024,
+     1024
+    ]
+   },
+   {
+    "id": "x2_512",
+    "task": "upscale2",
+    "input_size": [
+     512,
+     512
+    ],
+    "iters": [
+     {
+      "wall_s": 11.570029513000009,
+      "cpu_s": 22.821104,
+      "throttled_periods": 2,
+      "throttled_s": 0.001789,
+      "mem_peak_mb": 633.6796875
+     },
+     {
+      "wall_s": 11.698510663999969,
+      "cpu_s": 23.078117,
+      "throttled_periods": 6,
+      "throttled_s": 0.006582,
+      "mem_peak_mb": 561.11328125
+     }
+    ],
+    "output_size": [
+     1024,
+     1024
+    ]
+   },
+   {
+    "id": "x4_256",
+    "task": "upscale4",
+    "input_size": [
+     256,
+     256
+    ],
+    "iters": [
+     {
+      "wall_s": 16.286295178000046,
+      "cpu_s": 30.896369,
+      "throttled_periods": 1,
+      "throttled_s": 0.00091,
+      "mem_peak_mb": 914.140625
+     },
+     {
+      "wall_s": 16.927864524000142,
+      "cpu_s": 31.988492,
+      "throttled_periods": 1,
+      "throttled_s": 0.000897,
+      "mem_peak_mb": 914.27734375
+     }
+    ],
+    "output_size": [
+     1024,
+     1024
+    ]
+   },
+   {
+    "id": "x4_512",
+    "task": "upscale4",
+    "input_size": [
+     512,
+     512
+    ],
+    "iters": [
+     {
+      "wall_s": 68.77523565000001,
+      "cpu_s": 130.383724,
+      "throttled_periods": 4,
+      "throttled_s": 0.003627,
+      "mem_peak_mb": 1020.3125
+     },
+     {
+      "wall_s": 69.58199289699996,
+      "cpu_s": 131.883976,
+      "throttled_periods": 1,
+      "throttled_s": 0.0,
+      "mem_peak_mb": 1036.36328125
+     }
+    ],
+    "output_size": [
+     2048,
+     2048
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1490.703125,
+  "maxrss_mb": 1533.97265625
+ },
+ {
+  "name": "base_big",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 296.50770378112793,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7313680800002658
+  },
+  "jobs": [
+   {
+    "id": "x4_1024",
+    "task": "upscale4",
+    "input_size": [
+     1024,
+     1024
+    ],
+    "iters": [
+     {
+      "wall_s": 295.3320198079996,
+      "cpu_s": 560.581851,
+      "throttled_periods": 12,
+      "throttled_s": 0.008266,
+      "mem_peak_mb": 1143.41796875
+     }
+    ],
+    "output_size": [
+     4096,
+     4096
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1143.41796875,
+  "maxrss_mb": 1183.796875
+ },
+ {
+  "name": "base_profile",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 39.764657497406006,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {},
+  "jobs": [
+   {
+    "id": "profile",
+    "task": "profile",
+    "profile": {
+     "tile": 288,
+     "wall_s": 19.31738263000034,
+     "sum_kernel_s": 18.06093,
+     "by_op_s": {
+      "Conv": 11.658272999999996,
+      "ReorderInput": 3.139779999999999,
+      "Concat": 2.4094309999999997,
+      "ReorderOutput": 0.5352809999999999,
+      "Add": 0.15770800000000004,
+      "Upsample": 0.134113,
+      "Mul": 0.026323999999999997,
+      "Reshape": 2e-05
+     },
+     "trunk_s": 13.156443999999993,
+     "tail_s": 1.229425,
+     "layout_reorder_s": 3.6750610000000012,
+     "top_nodes": [
+      [
+       "/lrelu_1/LeakyRelu_output_0_nchwc",
+       0.444521
+      ],
+      [
+       "/lrelu_2/LeakyRelu_output_0_nchwc",
+       0.43144
+      ],
+      [
+       "/lrelu/LeakyRelu_output_0_nchwc",
+       0.110542
+      ],
+      [
+       "output_nchwc",
+       0.108809
+      ],
+      [
+       "/Resize_1_output_0_nchwc",
+       0.107758
+      ],
+      [
+       "/body/body.2/rdb3/Mul_output_0_nchwc",
+       0.075147
+      ]
+     ]
+    }
+   }
+  ],
+  "container_memory_peak_mb": 4768.20703125,
+  "maxrss_mb": 4802.12890625
+ }
+]

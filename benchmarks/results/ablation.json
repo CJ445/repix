@@ -1,0 +1,975 @@
+[
+ {
+  "name": "abl_prod",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 187.29205226898193,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7673265769999489
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 63.956833839999945,
+      "cpu_s": 121.844037,
+      "throttled_periods": 5,
+      "throttled_s": 0.003475,
+      "mem_peak_mb": 887.03125
+     },
+     {
+      "wall_s": 60.82771543299987,
+      "cpu_s": 116.561929,
+      "throttled_periods": 8,
+      "throttled_s": 0.005001,
+      "mem_peak_mb": 901.58984375
+     },
+     {
+      "wall_s": 60.30893028299988,
+      "cpu_s": 115.751461,
+      "throttled_periods": 6,
+      "throttled_s": 0.004687,
+      "mem_peak_mb": 920.36328125
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 920.36328125,
+  "maxrss_mb": 961.03515625
+ },
+ {
+  "name": "abl_ort_default",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "ort_default",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 104.02769660949707,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": ", mask: {2, 10, }, error code: 22 error msg: Invalid argument. Specify the number of threads explicitly so the affinity is not set.\u001b[m\n\u001b[1;31m2026-09-19 13:08:46.396209358 [E:onnxruntime:Default, env.cc:234 ThreadMain] pthread_setaffinity_np failed for thread: 17, index: 2, mask: {3, 11, }, error code: 22 error msg: Invalid argument. Specify the number of threads explicitly so the affinity is not set.\u001b[m\n\u001b[1;31m2026-09-19 13:08:46.402249538 [E:onnxruntime:Default, env.cc:234 ThreadMain] pthread_setaffinity_np failed for thread: 18, index: 3, mask: {4, 12, }, error code: 22 error msg: Invalid argument. Specify the number of threads explicitly so the affinity is not set.\u001b[m\n\u001b[1;31m2026-09-19 13:08:46.405214700 [E:onnxruntime:Default, env.cc:234 ThreadMain] pthread_setaffinity_np failed for thread: 19, index: 4, mask: {5, 13, }, error code: 22 error msg: Invalid argument. Specify the number of threads explicitly so the affinity is not set.\u001b[m\n\u001b[1;31m2026-09-19 13:08:46.408220107 [E:onnxruntime:Default, env.cc:234 ThreadMain] pthread_setaffinity_np failed for thread: 20, index: 5, mask: {6, 14, }, error code: 22 error msg: Invalid argument. Specify the number of threads explicitly so the affinity is not set.\u001b[m\n\u001b[1;31m2026-09-19 13:08:46.411215605 [E:onnxruntime:Default, env.cc:234 ThreadMain] pthread_setaffinity_np failed for thread: 21, index: 6, mask: {7, 15, }, error code: 22 error msg: Invalid argument. Specify the number of threads explicitly so the affinity is not set.\u001b[m\n",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "ort_default",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.875865020999754
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 101.65862717300024,
+      "cpu_s": 203.022932,
+      "throttled_periods": 318,
+      "throttled_s": 0.121449,
+      "mem_peak_mb": 1477.13671875
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1509.13671875,
+  "maxrss_mb": 1548.578125
+ },
+ {
+  "name": "abl_ort_default_quota_only",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": null,
+  "variant": "ort_default",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 88.74403858184814,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-15",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "ort_default",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.800910400000248
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 86.37796125400018,
+      "cpu_s": 172.772604,
+      "throttled_periods": 863,
+      "throttled_s": 523.356891,
+      "mem_peak_mb": 1501.453125
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1509.453125,
+  "maxrss_mb": 1547.48828125
+ },
+ {
+  "name": "abl_arena_on",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "arena_on",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 49.65400958061218,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "arena_on",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.781344099999842
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 47.15681336300031,
+      "cpu_s": 93.62878,
+      "throttled_periods": 43,
+      "throttled_s": 0.022429,
+      "mem_peak_mb": 1463.79296875
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1507.34375,
+  "maxrss_mb": 1546.96484375
+ },
+ {
+  "name": "abl_spin_on",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "spin_on",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 64.5720591545105,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "spin_on",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7369276280001031
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 62.460096574999625,
+      "cpu_s": 124.28004,
+      "throttled_periods": 126,
+      "throttled_s": 0.11739,
+      "mem_peak_mb": 887.3671875
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 887.3671875,
+  "maxrss_mb": 928.25
+ },
+ {
+  "name": "abl_thread_env",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "thread_env",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 65.02722883224487,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "thread_env",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7343863610003609
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 62.91174544800015,
+      "cpu_s": 120.126827,
+      "throttled_periods": 7,
+      "throttled_s": 0.006061,
+      "mem_peak_mb": 886.734375
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 886.734375,
+  "maxrss_mb": 928.2578125
+ },
+ {
+  "name": "abl_opt_basic",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "opt_basic",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 73.41436505317688,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "opt_basic",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.4128048249999665
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 71.61288367999987,
+      "cpu_s": 139.61059,
+      "throttled_periods": 32,
+      "throttled_s": 0.013384,
+      "mem_peak_mb": 853.59765625
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 855.79296875,
+  "maxrss_mb": 897.20703125
+ },
+ {
+  "name": "abl_fixed_tiles",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "fixed_tiles",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 125.42807054519653,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "fixed_tiles",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7331243049998193
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 123.28068728399967,
+      "cpu_s": 233.32733,
+      "throttled_periods": 7,
+      "throttled_s": 0.000352,
+      "mem_peak_mb": 952.66015625
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 952.66015625,
+  "maxrss_mb": 993.37109375
+ },
+ {
+  "name": "abl_fixed_arena",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "fixed_arena",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 89.0253038406372,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "fixed_arena",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7892845640003543
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 86.70852118199991,
+      "cpu_s": 172.460163,
+      "throttled_periods": 118,
+      "throttled_s": 0.044538,
+      "mem_peak_mb": 1893.234375
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1893.234375,
+  "maxrss_mb": 1932.35546875
+ },
+ {
+  "name": "abl_fixed_arena_shrink",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "fixed_arena_shrink",
+  "tile": 256,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 90.16067218780518,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "fixed_arena_shrink",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7782851319998372
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 87.96559131699996,
+      "cpu_s": 174.103794,
+      "throttled_periods": 96,
+      "throttled_s": 0.054164,
+      "mem_peak_mb": 1334.0546875
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1334.0546875,
+  "maxrss_mb": 1374.421875
+ },
+ {
+  "name": "abl_prod_ort123",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 256,
+  "ort123": true,
+  "x4_model": null,
+  "container_wall_s": 65.86156725883484,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.23.0",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7330454359998839
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 63.637247103999925,
+      "cpu_s": 121.388648,
+      "throttled_periods": 4,
+      "throttled_s": 0.000459,
+      "mem_peak_mb": 925.9296875
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 925.9296875,
+  "maxrss_mb": 953.51171875
+ },
+ {
+  "name": "abl_fixed_arena_ort123",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "fixed_arena",
+  "tile": 256,
+  "ort123": true,
+  "x4_model": null,
+  "container_wall_s": 88.50772666931152,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.23.0",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "fixed_arena",
+   "tile": 256,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7063550930001838
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 86.31447327099977,
+      "cpu_s": 171.664886,
+      "throttled_periods": 115,
+      "throttled_s": 0.058683,
+      "mem_peak_mb": 1883.46875
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1898.21875,
+  "maxrss_mb": 1940.15625
+ },
+ {
+  "name": "abl_tile128",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 128,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 67.97522449493408,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 128,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7407233580001957
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 65.85718296599998,
+      "cpu_s": 128.192933,
+      "throttled_periods": 12,
+      "throttled_s": 0.009124,
+      "mem_peak_mb": 501.86328125
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 501.86328125,
+  "maxrss_mb": 544.05859375
+ },
+ {
+  "name": "abl_tile384",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 384,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 72.90491819381714,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 384,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7349239889999808
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 70.73488094799995,
+      "cpu_s": 132.864397,
+      "throttled_periods": 7,
+      "throttled_s": 0.00538,
+      "mem_peak_mb": 1510.9375
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1510.9375,
+  "maxrss_mb": 1550.53515625
+ },
+ {
+  "name": "abl_tile512",
+  "cpus_cap": 2,
+  "mem_cap_gb": 8,
+  "cpuset": "0,1",
+  "variant": "prod",
+  "tile": 512,
+  "ort123": false,
+  "x4_model": null,
+  "container_wall_s": 69.12328290939331,
+  "exit_code": 0,
+  "oom_killed": false,
+  "killed_by_harness": null,
+  "log_tail": "",
+  "env": {
+   "cpus_seen_by_app": 2,
+   "os_cpu_count": 16,
+   "affinity": [
+    0,
+    1
+   ],
+   "cpu.max": "200000 100000",
+   "cpuset.cpus.effective": "0-1",
+   "memory.max": "8589934592",
+   "memory.swap.max": "0",
+   "pids.max": "256",
+   "onnxruntime": "1.20.1",
+   "python": "3.11.16",
+   "numpy": "1.26.4",
+   "variant": "prod",
+   "tile": 512,
+   "overlap": 16,
+   "x4_model": "realesrgan_x4plus.onnx"
+  },
+  "model_load_s": {
+   "upscale": 0.7469847920001484
+  },
+  "jobs": [
+   {
+    "id": "coffee_x4",
+    "task": "upscale4",
+    "input_size": [
+     600,
+     400
+    ],
+    "iters": [
+     {
+      "wall_s": 67.00718409299998,
+      "cpu_s": 125.887664,
+      "throttled_periods": 4,
+      "throttled_s": 0.003842,
+      "mem_peak_mb": 1910.93359375
+     }
+    ],
+    "output_size": [
+     2400,
+     1600
+    ]
+   }
+  ],
+  "container_memory_peak_mb": 1910.93359375,
+  "maxrss_mb": 1950.06640625
+ }
+]

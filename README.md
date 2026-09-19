@@ -200,6 +200,80 @@ docker compose up --build   # build and start both containers
 docker compose down         # stop and remove containers
 ```
 
+## Benchmarking & Deployment Testing
+
+Repix targets a small CPU-only VPS (the reference target is a **2 vCPU / 8 GB** plan, e.g. Hostinger KVM 2), so its performance was *measured*, not guessed — and measured on a 16-core / 16 GB development machine without ever putting that machine at risk. The full 14-page write-up, with the math, tables and original-vs-upscaled comparisons, is in [`benchmarks/repix-model-comparison.pdf`](./benchmarks/repix-model-comparison.pdf).
+
+### A benchmark harness that can't take the machine down
+
+Every measurement runs in its own throw-away container limited to the deployment target, one at a time:
+
+| Layer | Setting | Why |
+| ----- | ------- | --- |
+| CPU | `--cpus 2 --cpuset-cpus 0,1` | quota **and** pinning to two physical cores, so the app sees exactly 2 CPUs, like on the VPS |
+| Memory | `--memory 8g --memory-swap 8g` | hard cap, no swap: overshoot means the *container* is OOM-killed, never the host |
+| Isolation | `--network none --read-only --cap-drop ALL --pids-limit 256` | no network, nothing writable, no fork bombs |
+| OOM priority | `--oom-score-adj 800` | if the host ever ran short, the kernel kills the benchmark first |
+| Runner | pre-flight RAM/load checks, host-memory **watchdog**, per-run timeouts | a second line of defence independent of cgroups |
+
+The harness records what the kernel's cgroup accounting says each run consumed (`cpu.stat`, `memory.current` sampled every 20 ms), so the caps are *verified*, not assumed: across all timed runs the container peaked at **2.00 cores and 3.2 GiB against an 8 GiB cap**.
+
+### The math is checked against the model files
+
+Cost is modelled analytically and then asserted against the ONNX graphs:
+
+- Real-ESRGAN ×4 costs exactly **17,926,848 MAC per input pixel**, ×2 costs **4,483,008** — derived from the RRDBNet architecture and verified by summing every `Conv` node in the exported models (the report generator fails if they ever disagree).
+- From that: tiling overhead η, predicted job time `t ≈ MAC / G`, and a fitted memory model (`peak ≈ 316 MiB + 1.93 × one feature map`, R² = 1.000 over four tile sizes) that can be used for admission control.
+
+### Headline results (2 vCPU / 8 GB, shipped configuration)
+
+| Job | Time | Peak RAM |
+| --- | ---- | -------- |
+| Colorize any image (fixed 512×512 network) | ~2.2 s | ~1.4 GiB |
+| Upscale ×2, 512² → 1024² | ~11.7 s | ~0.6 GiB |
+| Upscale ×4, 512² → 2048² | ~70 s | ~1.0 GiB |
+| Upscale ×4, 1024² → 4096² | ~4 min 55 s | ~1.1 GiB |
+
+Throughput is ~76 GMAC/s. Absolute times come from a fast laptop CPU emulating a 2 vCPU plan — re-measure on your own host and rescale with `t ≈ MAC / G`.
+
+### Optimisations that were tested (and what they did)
+
+Each technique was switched on/off in an otherwise identical, freshly created container, with the shipped configuration repeated three times to measure noise (~6 %):
+
+| Experiment | Result |
+| ---------- | ------ |
+| Stock ONNX Runtime defaults on 2 vCPU | **+59 % time**; with only a CPU *quota* (host cores visible) ONNX Runtime spawns 16 threads and the kernel logged **523 s** of thread throttling inside a single 86 s job — the reason the app sizes its thread pool from the cgroup limit |
+| Memory arena + memory-pattern ON | **−26 % time**, +59 % RAM (600×400); at 1024²→4096² −30 % time but 3.2 GiB RAM |
+| Constant-shape tiles + arena + shrinkage | −21 % time at 1024²→4096²; **+38 % on a small image** because edge tiles get recomputed |
+| Thread spinning, OpenMP/BLAS/OpenCV thread pinning, ONNX Runtime 1.23, tile 256 vs 384/512 | within noise |
+| Skipping ORT's NCHWc layout transform (~20 % of kernel time in reorders) | **+12 % slower** — the transform pays for itself |
+| Profiling the 4×-resolution tail as a bandwidth bottleneck | not supported: ~7 % of time for ~7.6 % of the MACs |
+
+Negative and mixed results are reported as such, and the best setting depends on image size.
+
+### Candidate models
+
+Measured for the trade-off only; the shipped models are unchanged (see [`DECISIONS.md`](./DECISIONS.md)):
+
+| Model | ×4 of a 600×400 photo | Peak RAM | Mean Y-PSNR (clean / degraded input) |
+| ----- | --------------------- | -------- | ------------------------------------ |
+| Real-ESRGAN x4plus FP32 (shipped) | 60.3 s | 920 MiB | 25.99 / 24.63 dB |
+| x4plus INT8 (static QDQ, per-channel, held-out calibration) | 40.1 s (1.5×) | 921 MiB | 25.99 / 24.68 dB |
+| realesr-general-x4v3 (compact) | 3.7 s (16×) | 332 MiB | 26.27 / 24.54 dB |
+
+Quality was scored against ground truth (photos downsampled, then restored) with PSNR/SSIM plus side-by-side crops. Three small photos and no perceptual metric is a small sample, so treat quality verdicts as preliminary — the report says so too.
+
+### Run it yourself
+
+```bash
+python benchmarks/make_quality_inputs.py WORK      # ground-truth test pairs
+python benchmarks/run_benchmarks.py baseline --work WORK
+python benchmarks/run_benchmarks.py ablation --work WORK
+python benchmarks/make_report.py --work WORK --macs benchmarks/results/onnx_macs.json --out report.pdf
+```
+
+See [`benchmarks/README.md`](./benchmarks/README.md) for all stages. Raw results are checked in under [`benchmarks/results/`](./benchmarks/results).
+
 ## Testing
 
 ### Backend
@@ -242,6 +316,7 @@ repix/
 │   │   └── schemas/       Pydantic request/response schemas
 │   └── tests/
 ├── models/                Pinned ONNX weights, checksums, download script
+├── benchmarks/            Capped-container benchmark harness, raw results, comparison report (PDF)
 ├── docker/                Dockerfiles and nginx config
 ├── docker-compose.yml
 ├── .env.example

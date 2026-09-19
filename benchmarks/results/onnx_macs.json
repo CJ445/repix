@@ -1,0 +1,182 @@
+{
+ "realesrgan_x2plus@64x64": {
+  "macs": 18362400768,
+  "convs": 351,
+  "matmuls": 0,
+  "params": 16703171,
+  "nodes": 1198,
+  "init_dtypes": {
+   "FLOAT": 702
+  },
+  "top_ops": [
+   [
+    "Conv",
+    351
+   ],
+   [
+    "LeakyRelu",
+    279
+   ],
+   [
+    "Concat",
+    276
+   ],
+   [
+    "Constant",
+    99
+   ],
+   [
+    "Add",
+    93
+   ],
+   [
+    "Mul",
+    92
+   ]
+  ]
+ },
+ "realesrgan_x2plus@128x128": {
+  "macs": 73449603072,
+  "convs": 351,
+  "matmuls": 0,
+  "params": 16703171,
+  "nodes": 1198,
+  "init_dtypes": {
+   "FLOAT": 702
+  },
+  "top_ops": [
+   [
+    "Conv",
+    351
+   ],
+   [
+    "LeakyRelu",
+    279
+   ],
+   [
+    "Concat",
+    276
+   ],
+   [
+    "Constant",
+    99
+   ],
+   [
+    "Add",
+    93
+   ],
+   [
+    "Mul",
+    92
+   ]
+  ]
+ },
+ "realesrgan_x4plus@64x64": {
+  "macs": 73428369408,
+  "convs": 351,
+  "matmuls": 0,
+  "params": 16697987,
+  "nodes": 1187,
+  "init_dtypes": {
+   "FLOAT": 702
+  },
+  "top_ops": [
+   [
+    "Conv",
+    351
+   ],
+   [
+    "LeakyRelu",
+    279
+   ],
+   [
+    "Concat",
+    276
+   ],
+   [
+    "Constant",
+    94
+   ],
+   [
+    "Add",
+    93
+   ],
+   [
+    "Mul",
+    92
+   ]
+  ]
+ },
+ "realesrgan_x4plus@128x128": {
+  "macs": 293713477632,
+  "convs": 351,
+  "matmuls": 0,
+  "params": 16697987,
+  "nodes": 1187,
+  "init_dtypes": {
+   "FLOAT": 702
+  },
+  "top_ops": [
+   [
+    "Conv",
+    351
+   ],
+   [
+    "LeakyRelu",
+    279
+   ],
+   [
+    "Concat",
+    276
+   ],
+   [
+    "Constant",
+    94
+   ],
+   [
+    "Add",
+    93
+   ],
+   [
+    "Mul",
+    92
+   ]
+  ]
+ },
+ "ddcolor_tiny@512x512": {
+  "macs": 6624518144,
+  "convs": 25,
+  "matmuls": 36,
+  "params": 67427789,
+  "nodes": 1459,
+  "init_dtypes": {
+   "FLOAT16": 511
+  },
+  "top_ops": [
+   [
+    "Constant",
+    376
+   ],
+   [
+    "Add",
+    217
+   ],
+   [
+    "MatMul",
+    163
+   ],
+   [
+    "Transpose",
+    122
+   ],
+   [
+    "Reshape",
+    110
+   ],
+   [
+    "Mul",
+    86
+   ]
+  ]
+ }
+}
