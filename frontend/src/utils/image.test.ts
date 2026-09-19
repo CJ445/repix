@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSupportedImage, buildDownloadFilename, formatFileSize } from './image'
+import { isSupportedImage, buildDownloadFilename, formatFileSize, grayscalePixels } from './image'
 
 function makeFile(type: string, name = 'photo.png'): File {
   return new File([new Uint8Array([1, 2, 3])], name, { type })
@@ -67,5 +67,13 @@ describe('formatFileSize', () => {
     expect(formatFileSize(500 * 1024)).toBe('500 KB')
     expect(formatFileSize(3 * 1024 * 1024)).toBe('3.00 MB')
     expect(formatFileSize(25 * 1024 * 1024)).toBe('25.0 MB')
+  })
+})
+
+describe('grayscalePixels', () => {
+  it('sets R, G and B to the Rec. 601 luma and keeps alpha', () => {
+    const data = new Uint8ClampedArray([255, 0, 0, 255, 0, 255, 0, 128, 0, 0, 255, 0, 10, 10, 10, 255])
+    grayscalePixels(data)
+    expect(Array.from(data)).toEqual([76, 76, 76, 255, 150, 150, 150, 128, 29, 29, 29, 0, 10, 10, 10, 255])
   })
 })

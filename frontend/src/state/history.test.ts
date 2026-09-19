@@ -77,6 +77,7 @@ describe('history', () => {
   it('names ops for undo and redo labels', () => {
     expect(describeOp('cropped')).toBe('Crop')
     expect(describeOp('upscaled-4x')).toBe('Upscale 4×')
+    expect(describeOp('grayscaled')).toBe('Grayscale')
     expect(describeOp('mystery')).toBe('Edit')
   })
 })

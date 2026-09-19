@@ -76,6 +76,33 @@ export async function resizeImageBlob(
   return await canvasToBlob(canvas, mimeType)
 }
 
+/** Replace RGB with Rec. 601 luma in place; alpha is left untouched. */
+export function grayscalePixels(data: Uint8ClampedArray): void {
+  for (let i = 0; i < data.length; i += 4) {
+    const y = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2])
+    data[i] = data[i + 1] = data[i + 2] = y
+  }
+}
+
+/** Convert an image to black and white at full resolution, entirely in the browser. */
+export async function grayscaleImageBlob(source: EditorImage, mimeType = source.mimeType): Promise<Blob> {
+  const bitmap = await createImageBitmap(source.blob)
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = bitmap.width
+    canvas.height = bitmap.height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Canvas not supported')
+    ctx.drawImage(bitmap, 0, 0)
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    grayscalePixels(pixels.data)
+    ctx.putImageData(pixels, 0, 0)
+    return await canvasToBlob(canvas, mimeType)
+  } finally {
+    bitmap.close()
+  }
+}
+
 function canvasToBlob(canvas: HTMLCanvasElement, mimeType: string): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(

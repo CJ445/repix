@@ -22,6 +22,7 @@ const VERBS: Record<string, string> = {
   cropped: 'Crop',
   resized: 'Resize',
   colorized: 'Colorize',
+  grayscaled: 'Grayscale',
   'upscaled-2x': 'Upscale 2×',
   'upscaled-4x': 'Upscale 4×',
 }

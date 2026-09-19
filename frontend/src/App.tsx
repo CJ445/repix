@@ -14,7 +14,7 @@ import Logo from './components/Logo'
 import type { Tool } from './state/types'
 import * as H from './state/history'
 import { useCrop, type PixelCrop } from './state/useCrop'
-import { loadEditorImage, cropImageBlob, resizeImageBlob, readImageSize } from './utils/image'
+import { loadEditorImage, cropImageBlob, resizeImageBlob, grayscaleImageBlob, readImageSize } from './utils/image'
 import {
   createColorizeJob,
   createUpscaleJob,
@@ -132,6 +132,16 @@ export default function App() {
   async function handleResizeApply(w: number, h: number) {
     if (!image) return
     await commitBlob(await resizeImageBlob(image, w, h), 'resized')
+  }
+
+  async function handleGrayscale() {
+    if (!image) return
+    try {
+      await commitBlob(await grayscaleImageBlob(image), 'grayscaled')
+    } catch {
+      setError("We couldn't convert this image to grayscale. Try a smaller image.")
+      setPhase('failed')
+    }
   }
 
   async function runAiJob(kind: 'colorize' | 'upscale', scale?: 2 | 4) {
@@ -346,7 +356,13 @@ export default function App() {
               <div role="tabpanel" id={TOOL_PANEL_ID} aria-labelledby={toolTabId(tool)}>
                 {tool === 'crop' && <CropPanel crop={crop} onApply={handleCropApply} />}
                 {tool === 'resize' && <ResizeTool key={`${image.url}`} image={image} onApply={handleResizeApply} />}
-                {tool === 'colorize' && <ColorizeTool onStart={() => runAiJob('colorize')} disabled={phase === 'processing'} />}
+                {tool === 'colorize' && (
+                  <ColorizeTool
+                    onStart={() => runAiJob('colorize')}
+                    onGrayscale={handleGrayscale}
+                    disabled={phase === 'processing'}
+                  />
+                )}
                 {tool === 'upscale' && (
                   <UpscaleTool
                     image={image}
