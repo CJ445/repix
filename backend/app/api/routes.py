@@ -7,7 +7,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.core.config import Settings, get_settings
-from app.jobs.manager import JobError, JobManager
+from app.jobs.manager import JobError, JobManager, QueueFullError
 from app.models.job import JobStatus, Operation
 from app.schemas.jobs import JobOptions, JobResponse
 
@@ -21,6 +21,7 @@ def get_job_manager(request: Request) -> JobManager:
 
 
 def to_response(job, request: Request) -> JobResponse:
+    manager: JobManager = request.app.state.job_manager
     download_url = None
     if job.status == JobStatus.COMPLETED:
         download_url = f"/api/jobs/{job.id}/download"
@@ -29,6 +30,8 @@ def to_response(job, request: Request) -> JobResponse:
         status=job.status,
         operation=job.operation,
         scale=job.scale,
+        queue_position=manager.queue_position(job),
+        progress=job.progress if job.status == JobStatus.PROCESSING else None,
         download_url=download_url,
         error_message=job.error_message if job.status == JobStatus.FAILED else None,
     )
@@ -81,6 +84,8 @@ async def create_job(
 
     try:
         job = manager.create_job(operation=op, file_bytes=data, scale=parsed_options.scale)
+    except QueueFullError as exc:
+        raise HTTPException(status_code=503, detail=str(exc), headers={"Retry-After": "30"})
     except JobError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

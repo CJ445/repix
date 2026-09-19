@@ -7,6 +7,7 @@ import numpy as np
 import onnxruntime as ort
 from PIL import Image
 
+from app.engines.ort_options import build_session_options
 from app.engines.base import ColorizationEngine
 
 logger = logging.getLogger(__name__)
@@ -18,9 +19,7 @@ class DDColorEngine(ColorizationEngine):
     """DDColor-Tiny colorization backed by ONNX Runtime (CPUExecutionProvider, FP32)."""
 
     def __init__(self, model_path: str, num_threads: int = 0):
-        options = ort.SessionOptions()
-        if num_threads:
-            options.intra_op_num_threads = num_threads
+        options = build_session_options(num_threads)
         self._session = ort.InferenceSession(
             model_path, sess_options=options, providers=["CPUExecutionProvider"]
         )

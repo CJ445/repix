@@ -6,6 +6,8 @@ from typing import Callable
 from PIL import Image
 
 CancelCheck = Callable[[], bool]
+# Called with a completed fraction between 0 and 1.
+ProgressCallback = Callable[[float], None]
 
 
 class ColorizationEngine(ABC):
@@ -21,5 +23,6 @@ class UpscalingEngine(ABC):
         image: Image.Image,
         scale: int,
         cancel_check: CancelCheck | None = None,
+        progress: ProgressCallback | None = None,
     ) -> Image.Image:
         """Return an image scaled by exactly `scale`x (2 or 4)."""

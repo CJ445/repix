@@ -23,6 +23,10 @@ class JobError(Exception):
     """User-facing error raised during job creation (bad request)."""
 
 
+class QueueFullError(JobError):
+    """Raised when too many jobs are already running or waiting."""
+
+
 class JobManager:
     def __init__(
         self,
@@ -53,6 +57,9 @@ class JobManager:
         file_bytes: bytes,
         scale: int | None = None,
     ) -> Job:
+        with self._lock:
+            self._ensure_capacity_locked()
+
         if operation == Operation.UPSCALE:
             if self._upscaling_engine is None:
                 raise JobError("Upscaling isn't available right now. Please try again later.")
@@ -95,10 +102,36 @@ class JobManager:
         image.save(job.input_path, format="PNG")
 
         with self._lock:
+            try:
+                self._ensure_capacity_locked()
+            except QueueFullError:
+                storage.delete_job_dir(job.job_dir)
+                raise
             self._jobs[job.id] = job
 
         self._executor.submit(self._process_job, job.id)
         return job
+
+    def _ensure_capacity_locked(self) -> None:
+        active = sum(
+            1 for j in self._jobs.values() if j.status in (JobStatus.QUEUED, JobStatus.PROCESSING)
+        )
+        if active >= max(1, self._settings.max_ai_workers) + max(0, self._settings.max_queue_size):
+            raise QueueFullError(
+                "The server is busy processing other images. Please try again in a minute."
+            )
+
+    def queue_position(self, job: Job) -> int | None:
+        """1-based place in line for a queued job, or None if it isn't waiting."""
+        with self._lock:
+            if job.status != JobStatus.QUEUED:
+                return None
+            ahead = sum(
+                1
+                for j in self._jobs.values()
+                if j.status == JobStatus.QUEUED and j.created_at < job.created_at
+            )
+            return ahead + 1
 
     def get_job(self, job_id: str) -> Job | None:
         with self._lock:
@@ -146,7 +179,10 @@ class JobManager:
                 result = self._colorization_engine.colorize(image)  # type: ignore[union-attr]
             else:
                 result = self._upscaling_engine.upscale(  # type: ignore[union-attr]
-                    image, job.scale or 2, cancel_check=lambda: job.cancel_requested
+                    image,
+                    job.scale or 2,
+                    cancel_check=lambda: job.cancel_requested,
+                    progress=lambda fraction: setattr(job, "progress", fraction),
                 )
 
             has_alpha = result.mode == "RGBA"

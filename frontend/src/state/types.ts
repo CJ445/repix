@@ -13,6 +13,8 @@ export interface JobResponse {
   status: JobStatus
   operation?: 'colorize' | 'upscale'
   scale?: 2 | 4
+  queue_position?: number | null
+  progress?: number | null
   download_url?: string
   error_message?: string
 }

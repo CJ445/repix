@@ -19,7 +19,8 @@ React · TypeScript · FastAPI · ONNX Runtime · Docker
 - AI upscaling at 2×
 - AI upscaling at 4× (dedicated model, not the 2× model run twice)
 - Before/after comparison slider
-- One-click image download
+- Keep an AI result and continue editing (crop, resize, colorize, upscale) from the latest version
+- Download as PNG, JPG, or WebP, with the exact file size and dimensions shown for each option
 - Asynchronous, CPU-based AI processing with job status polling
 - Responsive interface (desktop and mobile)
 - Ephemeral processing storage — no persistent image storage
@@ -102,9 +103,10 @@ AI processing time is not fixed. It depends on CPU performance, input image reso
 ```bash
 git clone <repository-url>
 cd repix
-cp .env.example .env
-docker compose up --build
+./start.sh
 ```
+
+`start.sh` checks Docker, creates `.env` if missing, builds the images only if they don't exist yet, starts whatever isn't already running, and waits until the app is actually serving. Run `./start.sh --build` after pulling code changes to rebuild, or `./start.sh --logs` to follow logs. Stop with `./stop.sh` (keeps containers and images for a fast restart), `./stop.sh --down` (removes containers), or `./stop.sh --purge` (also removes the built images, after asking). Both scripts are safe to re-run. Plain `docker compose up --build` still works too.
 
 Then open:
 
@@ -166,8 +168,10 @@ cp .env.example .env
 | `MAX_OUTPUT_PIXELS`     | Maximum generated output pixel count           | `50000000`   |
 | `JOB_TTL_MINUTES`       | Minutes before an unclaimed job is cleaned up   | `60`         |
 | `MAX_AI_WORKERS`        | Concurrent AI inference jobs                   | `1`          |
+| `MAX_QUEUE_SIZE`        | Jobs allowed to wait behind running ones; more are refused with a "busy" message | `5` |
+| `AI_THREADS`            | CPU threads per AI job (`0` = auto, follows the container's CPU limit) | `0` |
 | `POLL_INTERVAL_MS`      | Suggested frontend polling interval             | `1500`       |
-| `UPSCALE_TILE_SIZE`     | Tile size used for large-image upscaling (px)  | `512`        |
+| `UPSCALE_TILE_SIZE`     | Tile size used for large-image upscaling (px); smaller = less RAM, slightly slower | `256`        |
 | `UPSCALE_TILE_OVERLAP`  | Overlap between upscaling tiles (px)           | `16`         |
 | `RATE_LIMIT_PER_MINUTE` | Per-IP limit on job creation                   | `10`         |
 
@@ -179,6 +183,17 @@ The stack is two services, defined in [`docker-compose.yml`](./docker-compose.ym
 - **`frontend`** — the Vite production build served by nginx, built from [`docker/frontend.Dockerfile`](./docker/frontend.Dockerfile), proxying `/api` to the backend container.
 
 There is no persistent volume for user images in either service.
+
+### Resource limits
+
+The backend container is capped so a burst of large jobs can't starve the host (VPS or laptop). Defaults are set in [`docker-compose.yml`](./docker-compose.yml) and can be overridden in `.env`:
+
+| Variable         | Default | Effect                                                              |
+| ---------------- | ------- | ------------------------------------------------------------------- |
+| `BACKEND_CPUS`   | `2`     | Hard CPU cap for the backend container                              |
+| `BACKEND_MEMORY` | `4g`    | Hard RAM cap (swap disabled); `/tmp/image-lab` tmpfs is capped at 512 MB |
+
+Work beyond that capacity queues instead of consuming more CPU: only `MAX_AI_WORKERS` jobs run at once, up to `MAX_QUEUE_SIZE` more wait (the UI shows the queue position), and anything past that gets a friendly "server is busy" response (HTTP 503). Inference threads automatically follow the container's CPU limit. Container logs are rotated (10 MB × 3), and the frontend container is capped at 0.5 CPU / 128 MB. Keep `BACKEND_CPUS` well below your host's core count.
 
 ```bash
 docker compose up --build   # build and start both containers

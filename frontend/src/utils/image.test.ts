@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSupportedImage, buildDownloadFilename } from './image'
+import { isSupportedImage, buildDownloadFilename, formatFileSize } from './image'
 
 function makeFile(type: string, name = 'photo.png'): File {
   return new File([new Uint8Array([1, 2, 3])], name, { type })
@@ -44,5 +44,28 @@ describe('buildDownloadFilename', () => {
 
   it('falls back gracefully when the name has no extension', () => {
     expect(buildDownloadFilename('noext', 'edited', 'jpg')).toBe('noext-edited.jpg')
+  })
+})
+
+describe('buildDownloadFilename with multiple edits', () => {
+  it('joins the applied operations in order', () => {
+    expect(buildDownloadFilename('a.jpg', ['colorized', 'cropped'], 'webp')).toBe(
+      'a-colorized-cropped.webp'
+    )
+  })
+
+  it('collapses long edit chains and empty lists to "edited"', () => {
+    expect(buildDownloadFilename('a.jpg', ['a', 'b', 'c', 'd'], 'png')).toBe('a-edited.png')
+    expect(buildDownloadFilename('a.jpg', [], 'png')).toBe('a-edited.png')
+  })
+})
+
+describe('formatFileSize', () => {
+  it('uses human-friendly units', () => {
+    expect(formatFileSize(512)).toBe('512 B')
+    expect(formatFileSize(2048)).toBe('2.0 KB')
+    expect(formatFileSize(500 * 1024)).toBe('500 KB')
+    expect(formatFileSize(3 * 1024 * 1024)).toBe('3.00 MB')
+    expect(formatFileSize(25 * 1024 * 1024)).toBe('25.0 MB')
   })
 })

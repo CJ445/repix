@@ -4,6 +4,7 @@ import CropTool from './components/CropTool'
 import ResizeTool from './components/ResizeTool'
 import ColorizeTool from './components/ColorizeTool'
 import UpscaleTool from './components/UpscaleTool'
+import DownloadDialog from './components/DownloadDialog'
 import CompareSlider from './components/CompareSlider'
 import ProcessingStatus from './components/ProcessingStatus'
 import type { EditorImage, Tool } from './state/types'
@@ -12,8 +13,7 @@ import {
   revokeEditorImage,
   cropImageBlob,
   resizeImageBlob,
-  triggerDownload,
-  buildDownloadFilename,
+  readImageSize,
 } from './utils/image'
 import {
   createColorizeJob,
@@ -35,7 +35,12 @@ export default function App() {
   const [resultUrl, setResultUrl] = useState<string | null>(null)
   const [resultBlob, setResultBlob] = useState<Blob | null>(null)
   const [resultOp, setResultOp] = useState<'colorized' | 'upscaled-2x' | 'upscaled-4x' | null>(null)
+  const [resultSize, setResultSize] = useState<{ width: number; height: number } | null>(null)
+  /** Edits already baked into `image`, used to name the downloaded file. */
+  const [ops, setOps] = useState<string[]>([])
+  const [showDownload, setShowDownload] = useState(false)
   const [statusLabel, setStatusLabel] = useState('Preparing image…')
+  const [progress, setProgress] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const activeJobId = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -52,6 +57,7 @@ export default function App() {
     try {
       const editorImage = await loadEditorImage(file)
       setImage(editorImage)
+      setOps([])
       setPhase('edit')
       setTool('crop')
     } catch {
@@ -59,34 +65,24 @@ export default function App() {
     }
   }
 
-  function replaceImage(blob: Blob) {
+  /** Make `blob` the current working image so later edits build on it. */
+  async function replaceImage(blob: Blob, op: string) {
     if (!image) return
+    const { width, height } = await readImageSize(blob)
     const url = URL.createObjectURL(blob)
     revokeEditorImage(image)
-    const el = new window.Image()
-    el.onload = () => {
-      setImage({
-        url,
-        blob,
-        width: el.naturalWidth,
-        height: el.naturalHeight,
-        name: image.name,
-        mimeType: blob.type || image.mimeType,
-      })
-    }
-    el.src = url
+    setImage({ url, blob, width, height, name: image.name, mimeType: blob.type || image.mimeType })
+    setOps((prev) => (prev[prev.length - 1] === op ? prev : [...prev, op]))
   }
 
   async function handleCropApply(px: { x: number; y: number; width: number; height: number }) {
     if (!image) return
-    const blob = await cropImageBlob(image, px)
-    replaceImage(blob)
+    await replaceImage(await cropImageBlob(image, px), 'cropped')
   }
 
   async function handleResizeApply(w: number, h: number) {
     if (!image) return
-    const blob = await resizeImageBlob(image, w, h)
-    replaceImage(blob)
+    await replaceImage(await resizeImageBlob(image, w, h), 'resized')
   }
 
   async function runAiJob(kind: 'colorize' | 'upscale', scale?: 2 | 4) {
@@ -94,6 +90,7 @@ export default function App() {
     setError(null)
     setPhase('processing')
     setStatusLabel('Preparing image…')
+    setProgress(null)
     const controller = new AbortController()
     abortRef.current = controller
     try {
@@ -107,7 +104,16 @@ export default function App() {
         job.job_id,
         POLL_INTERVAL_MS,
         (j) => {
-          if (j.status === 'processing') setStatusLabel('Running AI model…')
+          setProgress(j.status === 'processing' ? (j.progress ?? null) : null)
+          if (j.status === 'queued') {
+            setStatusLabel(
+              j.queue_position && j.queue_position > 1
+                ? `Waiting in queue — ${j.queue_position - 1} ahead of you…`
+                : 'Waiting for the server to free up…'
+            )
+          } else if (j.status === 'processing') {
+            setStatusLabel('Running AI model…')
+          }
         },
         controller.signal
       )
@@ -116,8 +122,14 @@ export default function App() {
         const res = await fetch(finalJob.download_url)
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
+        const size = await readImageSize(blob)
+        if (controller.signal.aborted) {
+          URL.revokeObjectURL(url)
+          return
+        }
         setResultUrl(url)
         setResultBlob(blob)
+        setResultSize(size)
         setResultOp(kind === 'colorize' ? 'colorized' : scale === 4 ? 'upscaled-4x' : 'upscaled-2x')
         setPhase('result')
       } else {
@@ -140,26 +152,39 @@ export default function App() {
     setPhase('edit')
   }
 
-  function handleDownload() {
-    if (!resultBlob || !image || !resultOp) return
-    const ext = resultBlob.type === 'image/jpeg' ? 'jpg' : resultBlob.type === 'image/webp' ? 'webp' : 'png'
-    triggerDownload(resultBlob, buildDownloadFilename(image.name, resultOp, ext))
+  function clearResult() {
+    if (resultUrl) URL.revokeObjectURL(resultUrl)
+    setResultUrl(null)
+    setResultBlob(null)
+    setResultOp(null)
+    setResultSize(null)
   }
 
-  function handleDownloadEdited() {
-    if (!image) return
-    const ext = image.mimeType === 'image/jpeg' ? 'jpg' : image.mimeType === 'image/webp' ? 'webp' : 'png'
-    triggerDownload(image.blob, buildDownloadFilename(image.name, 'edited', ext))
+  /** Adopt the AI result as the working image so it can be cropped, resized or processed again. */
+  async function keepResult() {
+    if (!resultBlob || !resultOp) return
+    await replaceImage(resultBlob, resultOp)
+    clearResult()
+    setTool('crop')
+    setPhase('edit')
   }
+
+  function discardResult() {
+    clearResult()
+    setPhase('edit')
+  }
+
+  const downloadSource =
+    phase === 'result' && resultBlob && resultSize && resultOp
+      ? { blob: resultBlob, ...resultSize, operations: [...ops, resultOp] }
+      : { blob: image?.blob, width: image?.width, height: image?.height, operations: ops }
 
   function reset() {
     if (activeJobId.current) deleteJob(activeJobId.current)
     revokeEditorImage(image)
-    if (resultUrl) URL.revokeObjectURL(resultUrl)
+    clearResult()
     setImage(null)
-    setResultUrl(null)
-    setResultBlob(null)
-    setResultOp(null)
+    setOps([])
     setError(null)
     setPhase('upload')
   }
@@ -183,7 +208,7 @@ export default function App() {
 
       <main className="flex flex-1 flex-col gap-6 px-6 py-6 md:flex-row">
         <section className="flex flex-1 items-center justify-center rounded-xl bg-neutral-50 p-4 dark:bg-neutral-900">
-          {phase === 'processing' && <ProcessingStatus label={statusLabel} />}
+          {phase === 'processing' && <ProcessingStatus label={statusLabel} progress={progress} />}
           {phase === 'result' && resultUrl && <CompareSlider beforeUrl={image.url} afterUrl={resultUrl} />}
           {(phase === 'edit' || phase === 'failed') && tool !== 'crop' && (
             <img src={image.url} alt={image.name} className="max-h-[65vh] w-auto rounded-lg" />
@@ -246,21 +271,65 @@ export default function App() {
           )}
 
           {phase === 'result' && (
-            <button onClick={() => setPhase('edit')} className="text-sm text-neutral-500 underline">
-              Back to editing
-            </button>
+            <div className="flex flex-col gap-3">
+              {resultOp?.startsWith('upscaled') ? (
+                <>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    Upscaled to {resultSize?.width} × {resultSize?.height} px. Download it to save
+                    the result.
+                  </p>
+                  <button
+                    onClick={() => setShowDownload(true)}
+                    className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900"
+                  >
+                    Download…
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    Happy with it? Keep the result to continue editing from this version — crop,
+                    resize, or run another AI step.
+                  </p>
+                  <button
+                    onClick={keepResult}
+                    className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900"
+                  >
+                    Keep result &amp; continue editing
+                  </button>
+                </>
+              )}
+              <button
+                onClick={discardResult}
+                className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              >
+                Discard &amp; go back
+              </button>
+            </div>
           )}
         </aside>
       </main>
 
       <footer className="border-t border-neutral-200 px-6 py-4 dark:border-neutral-800">
         <button
-          onClick={phase === 'result' ? handleDownload : handleDownloadEdited}
+          onClick={() => setShowDownload(true)}
+          disabled={phase === 'processing'}
           className="w-full rounded-lg bg-neutral-900 py-3 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900 md:w-auto md:px-8"
         >
-          Download Image
+          Download…
         </button>
       </footer>
+
+      {showDownload && downloadSource.blob && downloadSource.width && downloadSource.height && (
+        <DownloadDialog
+          blob={downloadSource.blob}
+          width={downloadSource.width}
+          height={downloadSource.height}
+          name={image.name}
+          operations={downloadSource.operations}
+          onClose={() => setShowDownload(false)}
+        />
+      )}
     </div>
   )
 }

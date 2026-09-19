@@ -41,6 +41,7 @@ class Job:
     output_height: int | None = None
     error_message: str | None = None
     cancel_requested: bool = False
+    progress: float | None = None  # 0-1 when the operation can report it
 
     @property
     def expires_at(self) -> float:

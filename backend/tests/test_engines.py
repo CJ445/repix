@@ -84,3 +84,13 @@ def test_realesrgan_invalid_scale_rejected():
     engine = RealESRGANEngine(str(X2_PATH), str(X4_PATH))
     with pytest.raises(ValueError):
         engine.upscale(_sample_image(50, 50), 3)
+
+
+def test_upscale_reports_tile_progress():
+    from app.engines.upscaling.realesrgan import RealESRGANEngine
+
+    engine = RealESRGANEngine(str(X2_PATH), str(X4_PATH), tile_size=64, tile_overlap=8)
+    seen: list[float] = []
+    engine.upscale(_sample_image(130, 70), 2, progress=seen.append)
+    assert len(seen) == 3 * 2  # ceil(130/64) x ceil(70/64) tiles
+    assert seen == sorted(seen) and seen[-1] == 1.0

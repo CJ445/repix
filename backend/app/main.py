@@ -4,6 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import cv2
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -24,6 +25,12 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     configure_logging(settings.log_level)
 
+    threads = settings.effective_ai_threads
+    cv2.setNumThreads(threads)
+    logger.info(
+        "AI limits: threads=%d workers=%d queue=%d", threads, settings.max_ai_workers, settings.max_queue_size
+    )
+
     models_dir = Path(settings.models_dir)
     ddcolor_path = models_dir / "ddcolor" / "ddcolor_tiny.onnx"
     x2_path = models_dir / "realesrgan" / "realesrgan_x2plus.onnx"
@@ -35,13 +42,14 @@ async def lifespan(app: FastAPI):
 
     try:
         if ddcolor_path.exists():
-            colorization_engine = DDColorEngine(str(ddcolor_path))
+            colorization_engine = DDColorEngine(str(ddcolor_path), num_threads=threads)
         if x2_path.exists() and x4_path.exists():
             upscaling_engine = RealESRGANEngine(
                 str(x2_path),
                 str(x4_path),
                 tile_size=settings.upscale_tile_size,
                 tile_overlap=settings.upscale_tile_overlap,
+                num_threads=threads,
             )
         models_loaded = colorization_engine is not None and upscaling_engine is not None
     except Exception:

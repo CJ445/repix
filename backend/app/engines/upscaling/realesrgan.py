@@ -7,7 +7,8 @@ import numpy as np
 import onnxruntime as ort
 from PIL import Image
 
-from app.engines.base import CancelCheck, UpscalingEngine
+from app.engines.ort_options import build_session_options
+from app.engines.base import CancelCheck, ProgressCallback, UpscalingEngine
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +34,7 @@ class RealESRGANEngine(UpscalingEngine):
         tile_overlap: int = 16,
         num_threads: int = 0,
     ):
-        options = ort.SessionOptions()
-        if num_threads:
-            options.intra_op_num_threads = num_threads
+        options = build_session_options(num_threads)
         self._sessions: dict[int, ort.InferenceSession] = {
             2: ort.InferenceSession(x2_model_path, sess_options=options, providers=["CPUExecutionProvider"]),
             4: ort.InferenceSession(x4_model_path, sess_options=options, providers=["CPUExecutionProvider"]),
@@ -52,6 +51,7 @@ class RealESRGANEngine(UpscalingEngine):
         image: Image.Image,
         scale: int,
         cancel_check: CancelCheck | None = None,
+        progress: ProgressCallback | None = None,
     ) -> Image.Image:
         if scale not in (2, 4):
             raise ValueError("scale must be 2 or 4")
@@ -64,7 +64,7 @@ class RealESRGANEngine(UpscalingEngine):
         if max(height, width) <= self.tile_size:
             output = self._run_tile(session, input_name, rgb)
         else:
-            output = self._tiled_inference(session, input_name, rgb, scale, cancel_check)
+            output = self._tiled_inference(session, input_name, rgb, scale, cancel_check, progress)
 
         output = np.clip(output * 255.0, 0, 255).round().astype(np.uint8)
         result = Image.fromarray(output, mode="RGB")
@@ -86,6 +86,7 @@ class RealESRGANEngine(UpscalingEngine):
         rgb: np.ndarray,
         scale: int,
         cancel_check: CancelCheck | None,
+        progress: ProgressCallback | None = None,
     ) -> np.ndarray:
         height, width = rgb.shape[:2]
         overlap = self.tile_overlap
@@ -96,6 +97,8 @@ class RealESRGANEngine(UpscalingEngine):
 
         tiles_x = math.ceil(width / step)
         tiles_y = math.ceil(height / step)
+        total_tiles = tiles_x * tiles_y
+        done_tiles = 0
 
         for ty in range(tiles_y):
             for tx in range(tiles_x):
@@ -123,5 +126,9 @@ class RealESRGANEngine(UpscalingEngine):
 
                 cropped = tile_out[top_pad : top_pad + region_h, left_pad : left_pad + region_w, :]
                 output[y0 * scale : y1 * scale, x0 * scale : x1 * scale, :] = cropped
+
+                done_tiles += 1
+                if progress:
+                    progress(done_tiles / total_tiles)
 
         return output

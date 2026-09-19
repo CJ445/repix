@@ -66,7 +66,18 @@ export async function pollJobUntilDone(
 ): Promise<JobResponse> {
   while (true) {
     if (signal?.aborted) throw new Error('cancelled')
-    const job = await getJob(jobId)
+    let job: JobResponse
+    try {
+      job = await getJob(jobId)
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 404 || err.status >= 502)) {
+        throw new ApiError(
+          'The server restarted or ran out of resources while processing. Please try again, ideally with a smaller image or lower scale.',
+          err.status
+        )
+      }
+      throw err
+    }
     onUpdate(job)
     if (['completed', 'failed', 'cancelled', 'expired'].includes(job.status)) {
       return job

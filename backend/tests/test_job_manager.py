@@ -15,7 +15,7 @@ class FakeColorizationEngine(ColorizationEngine):
 
 
 class FakeUpscalingEngine(UpscalingEngine):
-    def upscale(self, image, scale, cancel_check=None):
+    def upscale(self, image, scale, cancel_check=None, progress=None):
         w, h = image.size
         return image.resize((w * scale, h * scale))
 
@@ -110,4 +110,42 @@ def test_expiration_marks_job_expired_and_deletes_files(settings):
         assert final.status == JobStatus.EXPIRED
         assert not final.job_dir.exists()
     finally:
+        mgr.shutdown()
+
+
+class BlockingColorizationEngine(ColorizationEngine):
+    def __init__(self):
+        import threading
+
+        self.release = threading.Event()
+
+    def colorize(self, image):
+        self.release.wait(timeout=10)
+        return image.convert("RGB")
+
+
+def test_queue_position_and_full_queue_rejected(tmp_path):
+    from app.jobs.manager import QueueFullError
+
+    engine = BlockingColorizationEngine()
+    settings = Settings(temp_root=str(tmp_path), max_ai_workers=1, max_queue_size=1)
+    mgr = JobManager(settings, engine, FakeUpscalingEngine())
+    try:
+        first = mgr.create_job(operation=Operation.COLORIZE, file_bytes=_png_bytes())
+        second = mgr.create_job(operation=Operation.COLORIZE, file_bytes=_png_bytes())
+        assert mgr.queue_position(second) == 1
+
+        with pytest.raises(QueueFullError):
+            mgr.create_job(operation=Operation.COLORIZE, file_bytes=_png_bytes())
+
+        engine.release.set()
+        assert wait_for_terminal(mgr, first.id).status == JobStatus.COMPLETED
+        assert wait_for_terminal(mgr, second.id).status == JobStatus.COMPLETED
+        assert mgr.queue_position(second) is None
+
+        # Capacity is freed once jobs finish.
+        third = mgr.create_job(operation=Operation.COLORIZE, file_bytes=_png_bytes())
+        assert wait_for_terminal(mgr, third.id).status == JobStatus.COMPLETED
+    finally:
+        engine.release.set()
         mgr.shutdown()

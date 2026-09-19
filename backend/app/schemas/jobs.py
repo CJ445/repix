@@ -15,6 +15,8 @@ class JobResponse(BaseModel):
     status: JobStatus
     operation: Operation | None = None
     scale: int | None = None
+    queue_position: int | None = None
+    progress: float | None = None
     download_url: str | None = None
     error_message: str | None = None
 

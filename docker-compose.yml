@@ -7,8 +7,19 @@ services:
       - .env
     ports:
       - "8000:8000"
+    # Hard resource caps so a burst of large jobs can't starve the host.
+    # Extra jobs wait in the app's queue (see MAX_QUEUE_SIZE) instead of using more CPU.
+    cpus: ${BACKEND_CPUS:-2}
+    mem_limit: ${BACKEND_MEMORY:-4g}
+    memswap_limit: ${BACKEND_MEMORY:-4g}
+    pids_limit: 256
     tmpfs:
-      - /tmp/image-lab
+      - /tmp/image-lab:size=512m
+    logging: &default-logging
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -25,4 +36,8 @@ services:
       - "5173:80"
     depends_on:
       - backend
+    cpus: 0.5
+    mem_limit: 128m
+    pids_limit: 128
+    logging: *default-logging
     restart: unless-stopped

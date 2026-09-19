@@ -17,7 +17,7 @@ class FakeColorizationEngine(ColorizationEngine):
 
 
 class FakeUpscalingEngine(UpscalingEngine):
-    def upscale(self, image, scale, cancel_check=None):
+    def upscale(self, image, scale, cancel_check=None, progress=None):
         w, h = image.size
         return image.resize((w * scale, h * scale))
 
@@ -173,3 +173,37 @@ def test_job_ids_are_not_sequential(client):
     assert len(set(ids)) == 3
     for job_id in ids:
         assert len(job_id) >= 32
+
+
+def test_busy_server_returns_503_with_retry_after(tmp_path):
+    import threading
+
+    from app.api.routes import limiter
+
+    limiter.reset()  # the module-level limiter is shared across tests
+    release = threading.Event()
+
+    class SlowColorizer(ColorizationEngine):
+        def colorize(self, image):
+            release.wait(timeout=10)
+            return image.convert("RGB")
+
+    settings = Settings(
+        temp_root=str(tmp_path), rate_limit_per_minute=1000, max_ai_workers=1, max_queue_size=0
+    )
+    app = build_app(settings)
+    app.state.job_manager.shutdown()
+    app.state.job_manager = JobManager(settings, SlowColorizer(), FakeUpscalingEngine())
+    buf = io.BytesIO()
+    Image.new("RGB", (20, 20)).save(buf, format="PNG")
+    try:
+        with TestClient(app) as c:
+            files = {"file": ("a.png", buf.getvalue(), "image/png")}
+            first = c.post("/api/jobs", files=files, data={"operation": "colorize"})
+            assert first.status_code == 200
+            busy = c.post("/api/jobs", files=files, data={"operation": "colorize"})
+            assert busy.status_code == 503
+            assert busy.headers["retry-after"]
+    finally:
+        release.set()
+        app.state.job_manager.shutdown()

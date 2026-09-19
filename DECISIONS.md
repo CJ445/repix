@@ -52,3 +52,15 @@ don't need a CPU-bound model.
 `MAX_AI_WORKERS` is implemented as a `ThreadPoolExecutor` pool size inside a single backend
 process (no Celery/queue broker), since ONNX Runtime releases the GIL during inference and a
 single VPS process is sufficient per Section 71.
+
+### Resource limits and queueing
+The backend container has hard CPU/memory caps (`BACKEND_CPUS`, `BACKEND_MEMORY`) so inference can
+never take over the host. ONNX Runtime threads default to the cgroup CPU quota (not the host core
+count) with spinning disabled. Jobs beyond `MAX_AI_WORKERS` wait in the executor queue, bounded by
+`MAX_QUEUE_SIZE`; past that, job creation returns 503 + `Retry-After`.
+
+### Continuing after an AI step
+An AI result can be kept as the new working image, so crop/resize/further AI steps build on it.
+Downloads go through a dialog that really encodes PNG/JPG/WebP client-side, so the sizes shown are
+exact. Note that re-submitting a large kept result (e.g. a 4x upscale) to the AI is still subject
+to `MAX_UPLOAD_MB`.
