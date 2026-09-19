@@ -129,8 +129,14 @@ class JobManager:
             job.touch()
 
         try:
-            image = Image.open(job.input_path)
-            image.load()
+            try:
+                image = Image.open(job.input_path)
+                image.load()
+            except (FileNotFoundError, OSError):
+                if job.cancel_requested:
+                    self._mark_cancelled(job)
+                    return
+                raise
 
             if job.cancel_requested:
                 self._mark_cancelled(job)

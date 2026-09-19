@@ -23,7 +23,7 @@ def get_job_manager(request: Request) -> JobManager:
 def to_response(job, request: Request) -> JobResponse:
     download_url = None
     if job.status == JobStatus.COMPLETED:
-        download_url = str(request.url_for("download_job", job_id=job.id))
+        download_url = f"/api/jobs/{job.id}/download"
     return JobResponse(
         job_id=job.id,
         status=job.status,
