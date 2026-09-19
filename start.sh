@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start Repix (Image Lab) with Docker Compose.
+# Start Repix with Docker Compose.
 #
 # Checks Docker, .env, port availability, image and container state first, then does the
 # least work needed: build only what's missing, start only what isn't running, and wait

@@ -19,6 +19,7 @@ React · TypeScript · FastAPI · ONNX Runtime · Docker
 - AI upscaling at 2×
 - AI upscaling at 4× (dedicated model, not the 2× model run twice)
 - Before/after comparison slider
+- Undo, redo and revert to original (last 10 steps, Ctrl/Cmd+Z)
 - Keep an AI result and continue editing (crop, resize, colorize, upscale) from the latest version
 - Download as PNG, JPG, or WebP, with the exact file size and dimensions shown for each option
 - Asynchronous, CPU-based AI processing with job status polling

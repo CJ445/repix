@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop Repix (Image Lab).
+# Stop Repix.
 #
 #   ./stop.sh            stop the containers (keeps them and the images; fastest restart)
 #   ./stop.sh --down     stop and remove the containers (images are kept)

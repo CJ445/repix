@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Downloads pinned ONNX model weights used by Image Lab.
+# Downloads pinned ONNX model weights used by Repix.
 # Run once during image build (see docker/backend.Dockerfile) or manually
 # during local setup: `bash models/download_models.sh`.
 set -euo pipefail

@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import Dropzone from './components/Dropzone'
-import CropTool from './components/CropTool'
+import { CropStage, CropPanel } from './components/CropTool'
 import ResizeTool from './components/ResizeTool'
 import ColorizeTool from './components/ColorizeTool'
 import UpscaleTool from './components/UpscaleTool'
 import DownloadDialog from './components/DownloadDialog'
+import ConfirmDialog from './components/ConfirmDialog'
 import CompareSlider from './components/CompareSlider'
 import ProcessingStatus from './components/ProcessingStatus'
-import type { EditorImage, Tool } from './state/types'
-import {
-  loadEditorImage,
-  revokeEditorImage,
-  cropImageBlob,
-  resizeImageBlob,
-  readImageSize,
-} from './utils/image'
+import ToolTabs from './components/ToolTabs'
+import { TOOL_PANEL_ID, toolTabId } from './components/toolIds'
+import Logo from './components/Logo'
+import type { Tool } from './state/types'
+import * as H from './state/history'
+import { useCrop, type PixelCrop } from './state/useCrop'
+import { loadEditorImage, cropImageBlob, resizeImageBlob, readImageSize } from './utils/image'
 import {
   createColorizeJob,
   createUpscaleJob,
@@ -25,100 +25,160 @@ import {
 
 const MAX_OUTPUT_PIXELS = 50_000_000
 const POLL_INTERVAL_MS = 1500
+const STAGE_IMG = 'max-h-[45vh] w-auto rounded-lg md:max-h-[62vh]'
 
 type Phase = 'upload' | 'edit' | 'processing' | 'result' | 'failed'
+type ResultOp = 'colorized' | 'upscaled-2x' | 'upscaled-4x'
+interface AiResult {
+  url: string
+  blob: Blob
+  op: ResultOp
+  width: number
+  height: number
+}
 
 export default function App() {
   const [phase, setPhase] = useState<Phase>('upload')
-  const [image, setImage] = useState<EditorImage | null>(null)
+  const [history, setHistory] = useState<H.History | null>(null)
   const [tool, setTool] = useState<Tool>('crop')
-  const [resultUrl, setResultUrl] = useState<string | null>(null)
-  const [resultBlob, setResultBlob] = useState<Blob | null>(null)
-  const [resultOp, setResultOp] = useState<'colorized' | 'upscaled-2x' | 'upscaled-4x' | null>(null)
-  const [resultSize, setResultSize] = useState<{ width: number; height: number } | null>(null)
-  /** Edits already baked into `image`, used to name the downloaded file. */
-  const [ops, setOps] = useState<string[]>([])
+  const [result, setResult] = useState<AiResult | null>(null)
   const [showDownload, setShowDownload] = useState(false)
-  const [statusLabel, setStatusLabel] = useState('Preparing image…')
+  const [confirmNew, setConfirmNew] = useState(false)
+  const [statusLabel, setStatusLabel] = useState('Uploading image…')
   const [progress, setProgress] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const activeJobId = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const lastJob = useRef<{ kind: 'colorize' | 'upscale'; scale?: 2 | 4 } | null>(null)
+  const trackedUrls = useRef(new Set<string>())
+
+  const image = history?.present.image ?? null
+  const crop = useCrop(image)
+
+  // Object URLs live exactly as long as some undo step or the pending result needs them.
+  useEffect(() => {
+    const live = history ? H.liveUrls(history) : new Set<string>()
+    if (result) live.add(result.url)
+    for (const url of trackedUrls.current) {
+      if (!live.has(url)) {
+        URL.revokeObjectURL(url)
+        trackedUrls.current.delete(url)
+      }
+    }
+    for (const url of live) trackedUrls.current.add(url)
+  }, [history, result])
 
   useEffect(() => {
+    const tracked = trackedUrls.current
     return () => {
-      revokeEditorImage(image)
-      if (resultUrl) URL.revokeObjectURL(resultUrl)
+      for (const url of tracked) URL.revokeObjectURL(url)
+      tracked.clear()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function handleFile(file: File) {
-    try {
-      const editorImage = await loadEditorImage(file)
-      setImage(editorImage)
-      setOps([])
-      setPhase('edit')
-      setTool('crop')
-    } catch {
-      setError('Unable to read that image. Please try a different file.')
+  const editable = phase === 'edit' || phase === 'failed'
+  const canUndo = editable && !!history && history.past.length > 0
+  const canRedo = editable && !!history && history.future.length > 0
+  const canRevert = editable && !!history && history.present !== history.original
+
+  const undo = () => setHistory((h) => (h ? H.undo(h) : h))
+  const redo = () => setHistory((h) => (h ? H.redo(h) : h))
+  const revert = () => setHistory((h) => (h ? H.revert(h) : h))
+
+  // Cmd/Ctrl+Z, Shift+Cmd/Ctrl+Z and Ctrl+Y, except inside form fields (which have their own undo).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || showDownload || confirmNew) return
+      const target = e.target as HTMLElement | null
+      if (target && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable)) return
+      const key = e.key.toLowerCase()
+      if (key === 'z' && !e.shiftKey && canUndo) {
+        e.preventDefault()
+        undo()
+      } else if (((key === 'z' && e.shiftKey) || key === 'y') && canRedo) {
+        e.preventDefault()
+        redo()
+      }
     }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [canUndo, canRedo, showDownload, confirmNew])
+
+  /** Throws if the file can't be decoded; the dropzone shows the message. */
+  async function handleFile(file: File) {
+    const editorImage = await loadEditorImage(file)
+    setHistory(H.createHistory(editorImage))
+    setPhase('edit')
+    setTool('crop')
   }
 
-  /** Make `blob` the current working image so later edits build on it. */
-  async function replaceImage(blob: Blob, op: string) {
-    if (!image) return
-    const { width, height } = await readImageSize(blob)
-    const url = URL.createObjectURL(blob)
-    revokeEditorImage(image)
-    setImage({ url, blob, width, height, name: image.name, mimeType: blob.type || image.mimeType })
-    setOps((prev) => (prev[prev.length - 1] === op ? prev : [...prev, op]))
+  /** Make `blob` the current working image so later edits build on it (and can be undone). */
+  async function commitBlob(blob: Blob, op: string, knownUrl?: string, knownSize?: { width: number; height: number }) {
+    if (!history) return
+    const { width, height } = knownSize ?? (await readImageSize(blob))
+    const url = knownUrl ?? URL.createObjectURL(blob)
+    setHistory((h) =>
+      h
+        ? H.commit(h, { url, blob, width, height, name: h.present.image.name, mimeType: blob.type || h.present.image.mimeType }, op)
+        : h
+    )
   }
 
-  async function handleCropApply(px: { x: number; y: number; width: number; height: number }) {
+  async function handleCropApply(px: PixelCrop) {
     if (!image) return
-    await replaceImage(await cropImageBlob(image, px), 'cropped')
+    await commitBlob(await cropImageBlob(image, px), 'cropped')
   }
 
   async function handleResizeApply(w: number, h: number) {
     if (!image) return
-    await replaceImage(await resizeImageBlob(image, w, h), 'resized')
+    await commitBlob(await resizeImageBlob(image, w, h), 'resized')
   }
 
   async function runAiJob(kind: 'colorize' | 'upscale', scale?: 2 | 4) {
     if (!image) return
+    lastJob.current = { kind, scale }
     setError(null)
     setPhase('processing')
-    setStatusLabel('Preparing image…')
+    setStatusLabel('Uploading image…')
     setProgress(null)
     const controller = new AbortController()
     abortRef.current = controller
+    const runningLabel =
+      kind === 'colorize'
+        ? 'Colorizing…'
+        : `Upscaling to ${scale}× (${image.width * scale!} × ${image.height * scale!} px)…`
     try {
       const job =
         kind === 'colorize'
           ? await createColorizeJob(image.blob, image.name)
           : await createUpscaleJob(image.blob, image.name, scale!)
+      if (controller.signal.aborted) {
+        void deleteJob(job.job_id)
+        return
+      }
       activeJobId.current = job.job_id
-      setStatusLabel('Processing image…')
+      setStatusLabel(runningLabel)
       const finalJob = await pollJobUntilDone(
         job.job_id,
         POLL_INTERVAL_MS,
         (j) => {
+          if (controller.signal.aborted) return
           setProgress(j.status === 'processing' ? (j.progress ?? null) : null)
           if (j.status === 'queued') {
+            const ahead = (j.queue_position ?? 1) - 1
             setStatusLabel(
-              j.queue_position && j.queue_position > 1
-                ? `Waiting in queue — ${j.queue_position - 1} ahead of you…`
-                : 'Waiting for the server to free up…'
+              ahead > 0
+                ? `Waiting in the queue: ${ahead} ${ahead === 1 ? 'job' : 'jobs'} ahead of yours…`
+                : 'Waiting for a free worker…'
             )
           } else if (j.status === 'processing') {
-            setStatusLabel('Running AI model…')
+            setStatusLabel(runningLabel)
           }
         },
         controller.signal
       )
       if (finalJob.status === 'completed' && finalJob.download_url) {
-        setStatusLabel('Encoding result…')
+        setStatusLabel('Receiving result…')
         const res = await fetch(finalJob.download_url)
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
@@ -127,20 +187,25 @@ export default function App() {
           URL.revokeObjectURL(url)
           return
         }
-        setResultUrl(url)
-        setResultBlob(blob)
-        setResultSize(size)
-        setResultOp(kind === 'colorize' ? 'colorized' : scale === 4 ? 'upscaled-4x' : 'upscaled-2x')
+        setResult({
+          url,
+          blob,
+          ...size,
+          op: kind === 'colorize' ? 'colorized' : scale === 4 ? 'upscaled-4x' : 'upscaled-2x',
+        })
         setPhase('result')
       } else {
-        setError(finalJob.error_message ?? "We couldn't process this image. Please try again.")
+        setError(finalJob.error_message ?? "We couldn't process this image. Try again, or try a smaller image.")
         setPhase('failed')
       }
     } catch (err) {
-      if (!(err instanceof Error && err.message === 'cancelled')) {
-        setError(err instanceof ApiError ? err.message : "We couldn't process this image. Please try a smaller image or try again.")
-        setPhase('failed')
-      }
+      if (controller.signal.aborted) return
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "We couldn't process this image. Try a smaller image, or try again."
+      )
+      setPhase('failed')
     } finally {
       activeJobId.current = null
     }
@@ -148,179 +213,172 @@ export default function App() {
 
   function cancelJob() {
     abortRef.current?.abort()
-    if (activeJobId.current) deleteJob(activeJobId.current)
+    if (activeJobId.current) void deleteJob(activeJobId.current)
     setPhase('edit')
-  }
-
-  function clearResult() {
-    if (resultUrl) URL.revokeObjectURL(resultUrl)
-    setResultUrl(null)
-    setResultBlob(null)
-    setResultOp(null)
-    setResultSize(null)
   }
 
   /** Adopt the AI result as the working image so it can be cropped, resized or processed again. */
   async function keepResult() {
-    if (!resultBlob || !resultOp) return
-    await replaceImage(resultBlob, resultOp)
-    clearResult()
+    if (!result) return
+    const { url, blob, op, width, height } = result
+    await commitBlob(blob, op, url, { width, height })
+    setResult(null)
     setTool('crop')
     setPhase('edit')
   }
 
   function discardResult() {
-    clearResult()
+    setResult(null)
     setPhase('edit')
   }
 
-  const downloadSource =
-    phase === 'result' && resultBlob && resultSize && resultOp
-      ? { blob: resultBlob, ...resultSize, operations: [...ops, resultOp] }
-      : { blob: image?.blob, width: image?.width, height: image?.height, operations: ops }
-
   function reset() {
-    if (activeJobId.current) deleteJob(activeJobId.current)
-    revokeEditorImage(image)
-    clearResult()
-    setImage(null)
-    setOps([])
+    abortRef.current?.abort()
+    if (activeJobId.current) void deleteJob(activeJobId.current)
+    setResult(null)
+    setHistory(null)
     setError(null)
+    setShowDownload(false)
+    setConfirmNew(false)
     setPhase('upload')
   }
 
-  if (phase === 'upload' || !image) {
-    return (
-      <div className="mx-auto flex min-h-screen max-w-5xl flex-col">
-        <Dropzone onFile={handleFile} />
-      </div>
-    )
+  const hasWork =
+    !!history && (history.past.length > 0 || history.future.length > 0 || phase === 'result' || phase === 'processing')
+
+  if (phase === 'upload' || !history || !image) {
+    return <Dropzone onFile={handleFile} />
   }
 
+  const downloadSource =
+    phase === 'result' && result
+      ? { blob: result.blob, width: result.width, height: result.height, operations: [...history.present.ops, result.op] }
+      : { blob: image.blob, width: image.width, height: image.height, operations: history.present.ops }
+
+  const shown = phase === 'result' && result ? result : image
+  const resultTitle =
+    result?.op === 'colorized' ? 'Colorized' : `Upscaled to ${result?.width} × ${result?.height} px`
+
   return (
-    <div className="mx-auto flex min-h-screen max-w-6xl flex-col">
-      <header className="flex items-center justify-between border-b border-neutral-200 px-6 py-4 dark:border-neutral-800">
-        <h1 className="text-lg font-semibold">Image Lab</h1>
-        <button onClick={reset} className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
-          Reset
-        </button>
+    <div className="mx-auto flex min-h-dvh max-w-6xl flex-col">
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-line bg-canvas px-4 py-2 md:px-6">
+        <Logo />
+        <h1 className="text-lg font-semibold">Repix</h1>
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={() => (hasWork ? setConfirmNew(true) : reset())} className="btn btn-quiet">
+            New Image
+          </button>
+          <button onClick={() => setShowDownload(true)} disabled={phase === 'processing'} className="btn btn-primary">
+            Download…
+          </button>
+        </div>
       </header>
 
-      <main className="flex flex-1 flex-col gap-6 px-6 py-6 md:flex-row">
-        <section className="flex flex-1 items-center justify-center rounded-xl bg-neutral-50 p-4 dark:bg-neutral-900">
-          {phase === 'processing' && <ProcessingStatus label={statusLabel} progress={progress} />}
-          {phase === 'result' && resultUrl && <CompareSlider beforeUrl={image.url} afterUrl={resultUrl} />}
-          {(phase === 'edit' || phase === 'failed') && tool !== 'crop' && (
-            <img src={image.url} alt={image.name} className="max-h-[65vh] w-auto rounded-lg" />
-          )}
-          {phase === 'edit' && tool === 'crop' && (
-            <CropTool image={image} onApply={handleCropApply} onCancel={() => setTool('resize')} />
-          )}
+      <main className="flex flex-1 flex-col gap-4 px-4 py-4 md:flex-row md:gap-6 md:px-6 md:py-6">
+        <section className="flex min-w-0 flex-1 flex-col gap-3" aria-label="Image">
+          <div className="flex flex-wrap items-center gap-1">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              title={canUndo ? `Undo ${H.describeOp(history.present.op)} (Ctrl+Z)` : undefined}
+              className="btn btn-quiet"
+            >
+              {canUndo ? `Undo ${H.describeOp(history.present.op)}` : 'Undo'}
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              title={canRedo ? `Redo ${H.describeOp(history.future[0].op)} (Shift+Ctrl+Z)` : undefined}
+              className="btn btn-quiet"
+            >
+              {canRedo ? `Redo ${H.describeOp(history.future[0].op)}` : 'Redo'}
+            </button>
+            {canRevert && (
+              <button onClick={revert} className="btn btn-quiet">
+                Revert to Original
+              </button>
+            )}
+            <span className="note ml-auto pr-1">
+              {shown.width} × {shown.height} px
+            </span>
+          </div>
+
+          <div className="relative flex min-h-72 flex-1 items-center justify-center rounded-xl border border-line bg-surface p-3 md:p-4">
+            {phase === 'processing' && (
+              <>
+                <img src={image.url} alt="" className={`${STAGE_IMG} opacity-30`} />
+                <div className="absolute inset-0 flex items-center justify-center p-4">
+                  <ProcessingStatus label={statusLabel} progress={progress} onCancel={cancelJob} />
+                </div>
+              </>
+            )}
+            {phase === 'result' && result && <CompareSlider beforeUrl={image.url} afterUrl={result.url} />}
+            {editable && tool !== 'crop' && <img src={image.url} alt={image.name} className={STAGE_IMG} />}
+            {editable && tool === 'crop' && <CropStage image={image} crop={crop} />}
+          </div>
         </section>
 
-        <aside className="flex w-full flex-col gap-6 md:w-80">
+        <aside className="flex w-full flex-col gap-4 md:w-80 md:shrink-0">
           {phase === 'failed' && (
-            <div role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-              {error}
-              <button onClick={() => setPhase('edit')} className="mt-2 block font-medium underline">
-                Try Again
-              </button>
+            <div role="alert" className="rounded-lg border border-danger bg-danger-soft p-4">
+              <p className="font-semibold text-danger">Couldn&rsquo;t process this image</p>
+              <p className="mt-1">{error}</p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => lastJob.current && runAiJob(lastJob.current.kind, lastJob.current.scale)}
+                  className="btn btn-secondary"
+                >
+                  Try Again
+                </button>
+                <button onClick={() => setPhase('edit')} className="btn btn-quiet">
+                  Dismiss
+                </button>
+              </div>
             </div>
           )}
 
-          {(phase === 'edit' || phase === 'failed') && (
-            <>
-              <nav className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-900">
-                {(['crop', 'resize', 'colorize', 'upscale'] as Tool[]).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setTool(t)}
-                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium capitalize transition ${
-                      tool === t
-                        ? 'bg-white shadow-sm dark:bg-neutral-700'
-                        : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </nav>
-
-              {tool === 'resize' && <ResizeTool image={image} onApply={handleResizeApply} />}
-              {tool === 'colorize' && (
-                <ColorizeTool onStart={() => runAiJob('colorize')} disabled={false} />
-              )}
-              {tool === 'upscale' && (
-                <UpscaleTool
-                  image={image}
-                  onStart={(scale) => runAiJob('upscale', scale)}
-                  disabled={false}
-                  maxOutputPixels={MAX_OUTPUT_PIXELS}
-                />
-              )}
-            </>
-          )}
-
-          {phase === 'processing' && (
-            <button
-              onClick={cancelJob}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300"
+          {(editable || phase === 'processing') && (
+            <fieldset
+              disabled={phase === 'processing'}
+              className="m-0 flex min-w-0 flex-col gap-4 border-0 p-0 disabled:opacity-60"
             >
-              Cancel
-            </button>
+              <ToolTabs tool={tool} onChange={setTool} />
+              <div role="tabpanel" id={TOOL_PANEL_ID} aria-labelledby={toolTabId(tool)}>
+                {tool === 'crop' && <CropPanel crop={crop} onApply={handleCropApply} />}
+                {tool === 'resize' && <ResizeTool key={`${image.url}`} image={image} onApply={handleResizeApply} />}
+                {tool === 'colorize' && <ColorizeTool onStart={() => runAiJob('colorize')} disabled={phase === 'processing'} />}
+                {tool === 'upscale' && (
+                  <UpscaleTool
+                    image={image}
+                    onStart={(scale) => runAiJob('upscale', scale)}
+                    disabled={phase === 'processing'}
+                    maxOutputPixels={MAX_OUTPUT_PIXELS}
+                  />
+                )}
+              </div>
+            </fieldset>
           )}
 
-          {phase === 'result' && (
+          {phase === 'result' && result && (
             <div className="flex flex-col gap-3">
-              {resultOp?.startsWith('upscaled') ? (
-                <>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Upscaled to {resultSize?.width} × {resultSize?.height} px. Download it to save
-                    the result.
-                  </p>
-                  <button
-                    onClick={() => setShowDownload(true)}
-                    className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900"
-                  >
-                    Download…
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Happy with it? Keep the result to continue editing from this version — crop,
-                    resize, or run another AI step.
-                  </p>
-                  <button
-                    onClick={keepResult}
-                    className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900"
-                  >
-                    Keep result &amp; continue editing
-                  </button>
-                </>
-              )}
-              <button
-                onClick={discardResult}
-                className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
-              >
-                Discard &amp; go back
+              <h2 className="text-lg font-semibold text-accent">{resultTitle}</h2>
+              <p className="text-ink-2">
+                Drag the handle to compare with the original.
+                {result.op === 'colorized' && ' The colors are the model’s guess, not the true original.'} Keep it
+                to continue editing from this version, or save it as it is with Download.
+              </p>
+              <button onClick={keepResult} className="btn btn-accent">
+                Keep Result
+              </button>
+              <button onClick={discardResult} className="btn btn-secondary">
+                Discard Result
               </button>
             </div>
           )}
         </aside>
       </main>
 
-      <footer className="border-t border-neutral-200 px-6 py-4 dark:border-neutral-800">
-        <button
-          onClick={() => setShowDownload(true)}
-          disabled={phase === 'processing'}
-          className="w-full rounded-lg bg-neutral-900 py-3 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900 md:w-auto md:px-8"
-        >
-          Download…
-        </button>
-      </footer>
-
-      {showDownload && downloadSource.blob && downloadSource.width && downloadSource.height && (
+      {showDownload && downloadSource.blob && (
         <DownloadDialog
           blob={downloadSource.blob}
           width={downloadSource.width}
@@ -328,6 +386,16 @@ export default function App() {
           name={image.name}
           operations={downloadSource.operations}
           onClose={() => setShowDownload(false)}
+        />
+      )}
+
+      {confirmNew && (
+        <ConfirmDialog
+          title="Start with a new image?"
+          message="This clears the current image, its undo history and any result you haven't downloaded."
+          confirmLabel="Discard and Start Over"
+          onConfirm={reset}
+          onCancel={() => setConfirmNew(false)}
         />
       )}
     </div>

@@ -1,4 +1,5 @@
 import type { EditorImage } from '../state/types'
+import ServerNote from './ServerNote'
 
 interface Props {
   image: EditorImage
@@ -9,11 +10,13 @@ interface Props {
 
 export default function UpscaleTool({ image, onStart, disabled, maxOutputPixels }: Props) {
   const options: { scale: 2 | 4 }[] = [{ scale: 2 }, { scale: 4 }]
+  const maxMegapixels = Math.round(maxOutputPixels / 1_000_000)
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-neutral-600 dark:text-neutral-400">
-        {image.width} × {image.height} px original
+      <p className="text-ink-2">
+        {image.width} × {image.height} px now. Upscaling adds detail with a model, so fine texture in the result
+        may be invented rather than recovered.
       </p>
       <div className="flex gap-3">
         {options.map(({ scale }) => {
@@ -25,18 +28,18 @@ export default function UpscaleTool({ image, onStart, disabled, maxOutputPixels 
               key={scale}
               disabled={disabled || exceeds}
               onClick={() => onStart(scale)}
-              title={exceeds ? 'Output would exceed the maximum supported size' : undefined}
-              className="flex flex-col items-center gap-1 rounded-lg border border-neutral-300 px-4 py-3 text-sm hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-neutral-700 dark:hover:bg-neutral-800"
+              className="flex min-h-16 min-w-32 flex-col items-center justify-center gap-0.5 rounded-lg border border-edge px-4 py-2 enabled:hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <span className="text-base font-semibold">{scale}×</span>
-              <span className="text-xs text-neutral-500">
-                {outW} × {outH}
+              <span className="text-lg font-semibold">{scale}×</span>
+              <span className="note">
+                {outW} × {outH} px
               </span>
-              {exceeds && <span className="text-xs text-red-500">Too large</span>}
+              {exceeds && <span className="note text-danger">Over {maxMegapixels} MP limit</span>}
             </button>
           )
         })}
       </div>
+      <ServerNote />
     </div>
   )
 }

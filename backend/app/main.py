@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Image Lab API", lifespan=lifespan)
+    app = FastAPI(title="Repix API", lifespan=lifespan)
 
     register_limiter(app)
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

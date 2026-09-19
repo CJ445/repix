@@ -1,32 +1,18 @@
-# React + TypeScript + Vite
+# Repix frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 19 + TypeScript + Vite + Tailwind CSS 4.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev      # http://localhost:5173, proxies /api to VITE_API_PROXY_TARGET (default http://localhost:8000)
+npm test         # vitest
+npm run lint     # oxlint
+npm run build    # tsc -b && vite build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Design notes
+
+- **Color tokens** live in `src/index.css` as semantic roles (`ink`, `ink-2`, `edge`, `accent`, …) with light, dark and increased-contrast values. Use these, not raw `neutral-*` classes. All text pairs are ≥ 4.5:1 and control edges ≥ 3:1.
+- `accent` means one thing: the AI produced this (results, Keep, compare handle).
+- **Undo/redo** (`src/state/history.ts`): last 10 steps plus Revert to Original; Ctrl/Cmd+Z, Shift+Ctrl/Cmd+Z.
+- Controls are 44px tall on small screens and 36px with a pointer; text is 16px / 14px.

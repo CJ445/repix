@@ -1,24 +1,135 @@
 @import "tailwindcss";
 
-@theme {
-  --color-canvas: #f7f7f8;
-  --color-ink: #16161a;
-}
-
+/*
+ * Semantic color tokens. Components use roles (ink, ink-2, edge, accent…), never raw
+ * neutral-* values, so light, dark and increased-contrast each get one place to be tuned.
+ * Every text pair below is ≥ 4.5:1 and every `edge` (control boundary) ≥ 3:1 on the
+ * surfaces it sits on, in both appearances.
+ *
+ * `accent` means exactly one thing: "the AI made this" (results, Keep, compare handle).
+ */
 :root {
   color-scheme: light dark;
+  --canvas: #f6f6f7;
+  --surface: #ffffff;
+  --sunken: #ececef;
+  --ink: #16161a;
+  --ink-2: #55555f;
+  --line: #dcdce0;
+  --edge: #85858f;
+  --accent: #0b6e69;
+  --on-accent: #ffffff;
+  --accent-soft: #dff3f1;
+  --danger: #b3261e;
+  --danger-soft: #fdecea;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #0e0e11;
+    --surface: #17171b;
+    --sunken: #0e0e11;
+    --ink: #f4f4f6;
+    --ink-2: #a6a6b0;
+    --line: #2c2c33;
+    --edge: #7a7a85;
+    --accent: #3fd0c4;
+    --on-accent: #032b28;
+    --accent-soft: #0f2d2b;
+    --danger: #ff8a80;
+    --danger-soft: #3a1512;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --ink-2: var(--ink);
+    --edge: var(--ink);
+    --line: var(--ink-2);
+  }
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-line: var(--line);
+  --color-edge: var(--edge);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
 }
 
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
   margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* 16px on touch-sized layouts, 14px once there is a pointer and room. */
+  font-size: 1rem;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+@media (min-width: 48rem) {
+  body {
+    font-size: 0.875rem;
+  }
+}
+
+/* One visible focus treatment for everything interactive, in both appearances. */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@layer components {
+  /* Controls: 44px tall on small screens (touch), 36px with a pointer. */
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 font-medium
+      transition-colors disabled:cursor-not-allowed disabled:opacity-50 md:min-h-9;
+  }
+  .btn-primary {
+    @apply bg-ink text-surface enabled:hover:bg-ink/85;
+  }
+  .btn-accent {
+    @apply bg-accent text-on-accent enabled:hover:brightness-110;
+  }
+  .btn-secondary {
+    @apply border border-edge text-ink enabled:hover:bg-sunken;
+  }
+  .btn-quiet {
+    @apply px-3 text-ink-2 enabled:hover:bg-sunken enabled:hover:text-ink;
+  }
+
+  .chip {
+    @apply inline-flex min-h-11 items-center justify-center rounded-md border border-edge px-3.5
+      text-ink transition-colors hover:bg-sunken md:min-h-9
+      aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-surface;
+  }
+
+  .field {
+    @apply min-h-11 rounded-md border border-edge bg-surface px-3 text-ink md:min-h-9;
+  }
+
+  .note {
+    @apply text-[0.8125rem] leading-snug text-ink-2;
+  }
+}
+
+@keyframes indeterminate-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -30,9 +141,4 @@ body {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-@keyframes indeterminate-slide {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(350%); }
 }

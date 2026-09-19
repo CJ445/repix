@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop'
+import ReactCrop from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import type { EditorImage } from '../state/types'
+import type { CropController, PixelCrop } from '../state/useCrop'
 
 const ASPECTS: { label: string; value: number | undefined }[] = [
   { label: 'Free', value: undefined },
@@ -11,95 +11,59 @@ const ASPECTS: { label: string; value: number | undefined }[] = [
   { label: '16:9', value: 16 / 9 },
 ]
 
-interface Props {
-  image: EditorImage
-  onApply: (pixelCrop: { x: number; y: number; width: number; height: number }) => void
-  onCancel: () => void
+/** The image with crop handles: lives in the editor's stage. */
+export function CropStage({ image, crop }: { image: EditorImage; crop: CropController }) {
+  return (
+    <ReactCrop crop={crop.crop} onChange={(_, percentCrop) => crop.setCrop(percentCrop)} aspect={crop.aspect}>
+      <img
+        src={image.url}
+        alt={image.name}
+        onLoad={(e) => {
+          const el = e.currentTarget
+          crop.setImgEl(el)
+          crop.applyAspect(undefined, el)
+        }}
+        className="max-h-[45vh] w-auto md:max-h-[62vh]"
+      />
+    </ReactCrop>
+  )
 }
 
-export default function CropTool({ image, onApply, onCancel }: Props) {
-  const [aspect, setAspect] = useState<number | undefined>(undefined)
-  const [crop, setCrop] = useState<Crop>()
-  const [imgEl, setImgEl] = useState<HTMLImageElement | null>(null)
-
-  const applyAspect = (value: number | undefined, el: HTMLImageElement | null = imgEl) => {
-    setAspect(value)
-    if (!el) return
-    if (value) {
-      setCrop(
-        centerCrop(
-          makeAspectCrop({ unit: '%', width: 80 }, value, el.width, el.height),
-          el.width,
-          el.height
-        )
-      )
-    } else {
-      setCrop({ unit: '%', x: 10, y: 10, width: 80, height: 80 })
-    }
-  }
-
-  const handleApply = () => {
-    if (!crop || !imgEl) return
-    const scaleX = image.width / imgEl.width
-    const scaleY = image.height / imgEl.height
-    const px =
-      crop.unit === '%'
-        ? {
-            x: (crop.x / 100) * imgEl.width,
-            y: (crop.y / 100) * imgEl.height,
-            width: (crop.width / 100) * imgEl.width,
-            height: (crop.height / 100) * imgEl.height,
-          }
-        : crop
-    onApply({
-      x: Math.round(px.x * scaleX),
-      y: Math.round(px.y * scaleY),
-      width: Math.round(px.width * scaleX),
-      height: Math.round(px.height * scaleY),
-    })
-  }
-
+/** Ratio chips and actions: lives in the editor's side panel, like every other tool. */
+export function CropPanel({
+  crop,
+  onApply,
+}: {
+  crop: CropController
+  onApply: (px: PixelCrop) => void
+}) {
+  const px = crop.toPixels()
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-2">
+      <div role="group" aria-label="Aspect ratio" className="flex flex-wrap gap-2">
         {ASPECTS.map((a) => (
           <button
             key={a.label}
-            onClick={() => applyAspect(a.value)}
-            className={`rounded-md border px-3 py-1.5 text-sm transition ${
-              aspect === a.value
-                ? 'border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900'
-                : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800'
-            }`}
+            type="button"
+            aria-pressed={crop.aspect === a.value}
+            onClick={() => crop.applyAspect(a.value)}
+            className="chip"
           >
             {a.label}
           </button>
         ))}
       </div>
-      <ReactCrop crop={crop} onChange={(_, percentCrop) => setCrop(percentCrop)} aspect={aspect}>
-        <img
-          src={image.url}
-          alt=""
-          onLoad={(e) => {
-            const el = e.currentTarget
-            setImgEl(el)
-            applyAspect(undefined, el)
-          }}
-          className="max-h-[60vh] w-auto"
-        />
-      </ReactCrop>
-      <div className="flex gap-2">
-        <button
-          onClick={handleApply}
-          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900"
-        >
+      {px && (
+        <p className="note">
+          Selection: {px.width} × {px.height} px
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <button disabled={!px} onClick={() => px && onApply(px)} className="btn btn-primary">
           Apply Crop
         </button>
-        <button
-          onClick={onCancel}
-          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
-        >
-          Cancel
+        <button onClick={() => crop.applyAspect(undefined)} className="btn btn-secondary">
+          Reset Selection
         </button>
       </div>
     </div>

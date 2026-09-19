@@ -1,8 +1,10 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { isSupportedImage } from '../utils/image'
+import Logo from './Logo'
 
 interface Props {
-  onFile: (file: File) => void
+  /** May throw or reject if the file can't be read; the message is shown here. */
+  onFile: (file: File) => void | Promise<void>
 }
 
 export default function Dropzone({ onFile }: Props) {
@@ -11,34 +13,42 @@ export default function Dropzone({ onFile }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const accept = useCallback(
-    (file: File | undefined) => {
+    async (file: File | undefined) => {
       if (!file) return
       if (!isSupportedImage(file)) {
-        setError('Unsupported image type')
+        setError("That file isn't a JPG, PNG or WebP. Choose another image.")
         return
       }
       setError(null)
-      onFile(file)
+      try {
+        await onFile(file)
+      } catch {
+        setError("Repix couldn't read that image. It may be damaged. Try another file.")
+      }
     },
     [onFile]
   )
 
+  // Pasting works anywhere on the page, not only when the drop area has focus.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith('image/'))
+      const file = item?.getAsFile()
+      if (file) void accept(file)
+    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [accept])
+
   return (
-    <div className="flex min-h-[70vh] flex-1 flex-col items-center justify-center px-6">
-      <h1 className="mb-2 text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
-        Image Lab
-      </h1>
-      <p className="mb-8 text-sm text-neutral-500 dark:text-neutral-400">
-        Crop, resize, colorize and upscale — right in your browser.
-      </p>
+    <main className="flex min-h-dvh flex-1 flex-col items-center justify-center px-4 py-10 md:px-6">
+      <div className="mb-3 flex items-center gap-3">
+        <Logo className="h-9 w-9" />
+        <h1 className="text-3xl font-semibold tracking-tight">Repix</h1>
+      </div>
+      <p className="mb-8 text-center text-ink-2">Crop, resize, colorize and upscale your photos.</p>
+
       <div
-        role="button"
-        tabIndex={0}
-        aria-label="Drop an image here or choose a file"
-        onClick={() => inputRef.current?.click()}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click()
-        }}
         onDragOver={(e) => {
           e.preventDefault()
           setIsOver(true)
@@ -47,47 +57,40 @@ export default function Dropzone({ onFile }: Props) {
         onDrop={(e) => {
           e.preventDefault()
           setIsOver(false)
-          accept(e.dataTransfer.files?.[0])
+          void accept(e.dataTransfer.files?.[0])
         }}
-        onPaste={(e) => {
-          const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith('image/'))
-          const file = item?.getAsFile()
-          if (file) accept(file)
-        }}
-        className={`flex w-full max-w-xl cursor-pointer flex-col items-center gap-4 rounded-2xl border-2 border-dashed px-10 py-16 text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-neutral-100 ${
-          isOver
-            ? 'border-neutral-900 bg-neutral-50 dark:border-neutral-100 dark:bg-neutral-900'
-            : 'border-neutral-300 dark:border-neutral-700'
+        className={`flex w-full max-w-xl flex-col items-center gap-4 rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-colors md:px-10 md:py-16 ${
+          isOver ? 'border-ink bg-sunken' : 'border-edge'
         }`}
       >
-        <p className="text-lg font-medium text-neutral-800 dark:text-neutral-100">
-          {isOver ? 'Release to upload' : 'Drop an image here'}
-        </p>
-        <p className="text-sm text-neutral-500">or</p>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            inputRef.current?.click()
-          }}
-          className="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
-        >
+        <p className="text-lg font-medium">{isOver ? 'Release to upload' : 'Drop an image here'}</p>
+        <button type="button" onClick={() => inputRef.current?.click()} className="btn btn-primary px-6">
           Choose Image
         </button>
-        <p className="text-xs uppercase tracking-wide text-neutral-400">JPG · PNG · WebP</p>
+        <p className="note">JPG, PNG or WebP. You can also paste an image from the clipboard.</p>
         <input
           ref={inputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
           className="hidden"
-          onChange={(e) => accept(e.target.files?.[0])}
+          aria-label="Choose an image file"
+          onChange={(e) => {
+            void accept(e.target.files?.[0])
+            e.target.value = ''
+          }}
         />
       </div>
+
       {error && (
-        <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="mt-4 max-w-xl text-center text-danger">
           {error}
         </p>
       )}
-    </div>
+
+      <p className="note mt-8 max-w-md text-center">
+        Crop and resize happen on your device. Colorize and upscale send the image to this Repix server, which
+        deletes it after you download the result or when it expires. Nothing is kept in an account or gallery.
+      </p>
+    </main>
   )
 }
