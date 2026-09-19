@@ -5,6 +5,12 @@ measurement runs in a capped, network-less, read-only container, one at a time, 
 cannot take the host down. The finished write-up is
 [`repix-model-comparison.pdf`](./repix-model-comparison.pdf); raw numbers are in [`results/`](./results).
 
+> **Note:** the PDF report, `results/baseline.json`, `results/quality.json` and `results/onnx_macs.json`
+> were produced when colorization used DDColor-Tiny, and `make_report.py` still refers to it (its
+> `ddcolor_tiny` MAC-count key and model path). The upscaling results are unaffected. `bench_worker.py`
+> already loads DDColor-Large, so re-running the stages measures Large; the report needs a fresh
+> `onnx_macs.json` with a `ddcolor_large@512x512` entry and the `make_report.py` text updated to match.
+
 | File | Purpose |
 | ---- | ------- |
 | `run_benchmarks.py` | Host-side orchestrator: container caps, pre-flight checks, watchdog. Stages: `baseline`, `ablation`, `ablation_big`, `prep`, `candidates`, `quality` |

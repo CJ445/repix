@@ -34,7 +34,7 @@ Repix uses two fixed, purpose-specific ONNX models. Both run through [ONNX Runti
 
 ### Colorization
 
-**[DDColor-Tiny](https://github.com/piddnad/DDColor)**
+**[DDColor-Large](https://github.com/piddnad/DDColor)**
 
 Used for grayscale → color conversion. The image is processed locally as part of an asynchronous backend job; no image data is sent to a third-party service.
 
@@ -66,7 +66,7 @@ flowchart TD
     B --> C[FastAPI]
     C --> D[Job Processor]
     D --> E[Pillow / OpenCV]
-    D --> F[DDColor-Tiny]
+    D --> F[DDColor-Large]
     D --> G[Real-ESRGAN]
     F --> H[ONNX Runtime]
     G --> H
@@ -85,7 +85,7 @@ The frontend handles upload, preview, crop, and resize locally in the browser �
 | Backend          | FastAPI                     |
 | Image processing | Pillow / OpenCV             |
 | AI inference     | ONNX Runtime (CPU)          |
-| Colorization     | DDColor-Tiny                |
+| Colorization     | DDColor-Large               |
 | Upscaling        | Real-ESRGAN (x2plus/x4plus) |
 | Rate limiting    | slowapi                     |
 | Containerization | Docker                      |
@@ -230,10 +230,12 @@ Cost is modelled analytically and then asserted against the ONNX graphs:
 
 | Job | Time | Peak RAM |
 | --- | ---- | -------- |
-| Colorize any image (fixed 512×512 network) | ~2.2 s | ~1.4 GiB |
+| Colorize any image (fixed 512×512 network, DDColor-Large) | ~4.9 s | ~2.1 GiB |
 | Upscale ×2, 512² → 1024² | ~11.7 s | ~0.6 GiB |
 | Upscale ×4, 512² → 2048² | ~70 s | ~1.0 GiB |
 | Upscale ×4, 1024² → 4096² | ~4 min 55 s | ~1.1 GiB |
+
+The colorization row was re-measured after the switch from DDColor-Tiny to DDColor-Large, end to end through the API in the default `docker compose` stack (2 CPUs, 4 GiB cap, no OOM; peak RAM sampled at ~1 s, so treat it as approximate). The other rows and the PDF report below were measured with the original Tiny model and the pinned-core harness.
 
 Throughput is ~76 GMAC/s. Absolute times come from a fast laptop CPU emulating a 2 vCPU plan — re-measure on your own host and rescale with `t ≈ MAC / G`.
 

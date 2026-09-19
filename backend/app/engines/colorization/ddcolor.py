@@ -16,7 +16,7 @@ INPUT_SIZE = 512
 
 
 class DDColorEngine(ColorizationEngine):
-    """DDColor-Tiny colorization backed by ONNX Runtime (CPUExecutionProvider, FP32)."""
+    """DDColor-Large colorization backed by ONNX Runtime (CPUExecutionProvider, FP32)."""
 
     def __init__(self, model_path: str, num_threads: int = 0):
         options = build_session_options(num_threads)
@@ -24,7 +24,7 @@ class DDColorEngine(ColorizationEngine):
             model_path, sess_options=options, providers=["CPUExecutionProvider"]
         )
         self._input_name = self._session.get_inputs()[0].name
-        logger.info("DDColor-Tiny model loaded from %s", model_path)
+        logger.info("DDColor-Large model loaded from %s", model_path)
 
     def colorize(self, image: Image.Image) -> Image.Image:
         rgb = np.array(image.convert("RGB"), dtype=np.float32) / 255.0

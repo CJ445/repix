@@ -19,8 +19,8 @@ download() {
   curl -sL --fail -o "$dest" "$url"
 }
 
-download "https://huggingface.co/edgetools/ddcolor/resolve/main/ddcolor-tiny-fp16.onnx" \
-  "ddcolor/ddcolor_tiny.onnx"
+download "https://huggingface.co/Diogo122333/ddcolor-512-fp16/resolve/main/ddcolor-512-fp16.onnx" \
+  "ddcolor/ddcolor_large.onnx"
 
 download "https://huggingface.co/SceneWorks/real-esrgan-onnx/resolve/main/real_esrgan_x2.onnx" \
   "realesrgan/realesrgan_x2plus.onnx"

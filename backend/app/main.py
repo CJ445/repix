@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
     )
 
     models_dir = Path(settings.models_dir)
-    ddcolor_path = models_dir / "ddcolor" / "ddcolor_tiny.onnx"
+    ddcolor_path = models_dir / "ddcolor" / "ddcolor_large.onnx"
     x2_path = models_dir / "realesrgan" / "realesrgan_x2plus.onnx"
     x4_path = models_dir / "realesrgan" / "realesrgan_x4plus.onnx"
 

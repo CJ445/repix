@@ -135,7 +135,7 @@ These model decisions are FINAL for MVP.
 
 Model:
 
-**DDColor-Tiny**
+**DDColor-Large**
 
 Purpose:
 
@@ -149,7 +149,7 @@ CPUExecutionProvider
 FP32
 ```
 
-The DDColor project provides a Tiny pretrained model and ONNX export support. The implementation must use the Tiny model rather than the larger model to keep CPU deployment practical.
+The DDColor project provides Tiny and Large pretrained models. The implementation uses the **Large** model: the original draft of this PRD specified Tiny to keep CPU deployment practical, but measurements on the 2 vCPU target showed Large fits comfortably (see `DECISIONS.md`, "Colorization model change").
 
 Do NOT:
 
@@ -231,7 +231,7 @@ Expected conceptual structure:
 ```text
 models/
     ddcolor/
-        ddcolor_tiny.onnx
+        ddcolor_large.onnx
 
     realesrgan/
         realesrgan_x2plus.onnx
@@ -1718,7 +1718,7 @@ Docker Compose starts successfully.
 All three ONNX models load:
 
 ```text
-DDColor-Tiny
+DDColor-Large
 RealESRGAN_x2plus
 RealESRGAN_x4plus
 ```
@@ -1964,7 +1964,7 @@ DECISIONS.md
 Record fixed decisions:
 
 ```text
-DDColor-Tiny
+DDColor-Large
 RealESRGAN_x2plus
 RealESRGAN_x4plus
 ONNX Runtime CPU
@@ -2019,7 +2019,7 @@ Job infrastructure.
 
 Colorization.
 
-* DDColor-Tiny
+* DDColor-Large
 * ONNX inference
 * CPU execution
 * API

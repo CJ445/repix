@@ -254,7 +254,7 @@ def main() -> None:
     load_s: dict[str, float] = {}
     if "colorize" in tasks:
         t = time.perf_counter()
-        engines["colorize"] = DDColorEngine(str(m / "ddcolor/ddcolor_tiny.onnx"), num_threads=threads)
+        engines["colorize"] = DDColorEngine(str(m / "ddcolor/ddcolor_large.onnx"), num_threads=threads)
         load_s["colorize"] = time.perf_counter() - t
     if tasks & {"upscale2", "upscale4"}:
         t = time.perf_counter()

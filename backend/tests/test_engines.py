@@ -12,7 +12,7 @@ import pytest
 from PIL import Image
 
 MODELS_DIR = Path(__file__).resolve().parents[2] / "models"
-DDCOLOR_PATH = MODELS_DIR / "ddcolor" / "ddcolor_tiny.onnx"
+DDCOLOR_PATH = MODELS_DIR / "ddcolor" / "ddcolor_large.onnx"
 X2_PATH = MODELS_DIR / "realesrgan" / "realesrgan_x2plus.onnx"
 X4_PATH = MODELS_DIR / "realesrgan" / "realesrgan_x4plus.onnx"
 
