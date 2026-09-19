@@ -1,157 +1,307 @@
-# Image Lab
+# Repix
 
-A privacy-oriented, CPU-hosted image editor: crop, resize, AI colorization, and
-AI upscaling (2x/4x), running entirely on CPU infrastructure. See `PRD.md` for
-the full product/technical specification and `DECISIONS.md` for fixed and
-resolved implementation decisions.
+A privacy-focused image processing workspace for editing, colorizing, and upscaling images — built to run entirely on CPU.
 
-## What it does
+```text
+React · TypeScript · FastAPI · ONNX Runtime · Docker
+```
 
-1. Drop an image (JPEG/PNG/WebP) — preview appears instantly, client-side.
-2. Crop and resize locally in the browser (no round-trip).
-3. Colorize a grayscale image using **DDColor-Tiny**, or upscale 2x/4x using
-   **RealESRGAN_x2plus/x4plus** — both run asynchronously on the backend via
-   ONNX Runtime (CPU, FP32).
-4. Compare before/after with a slider, then download the result.
-5. Nothing is stored permanently: temp files live under `/tmp/image-lab/<job>`
-   and are deleted after download or TTL expiry (`JOB_TTL_MINUTES`).
+## Preview
+
+<!-- Add a screenshot or short screen recording of the editor here once available. -->
+
+## Features
+
+- Drag-and-drop image upload with instant local preview
+- Interactive crop (free, 1:1, 4:3, 3:2, 16:9)
+- Resize with locked/unlocked aspect ratio and percentage presets
+- Grayscale-to-color photo colorization
+- AI upscaling at 2×
+- AI upscaling at 4× (dedicated model, not the 2× model run twice)
+- Before/after comparison slider
+- One-click image download
+- Asynchronous, CPU-based AI processing with job status polling
+- Responsive interface (desktop and mobile)
+- Ephemeral processing storage — no persistent image storage
+- Dockerized frontend and backend
+- No GPU required
+
+## AI Models
+
+Repix uses two fixed, purpose-specific ONNX models. Both run through [ONNX Runtime](https://onnxruntime.ai/) on `CPUExecutionProvider`, using FP32 — no CUDA, no GPU, no external inference API.
+
+### Colorization
+
+**[DDColor-Tiny](https://github.com/piddnad/DDColor)**
+
+Used for grayscale → color conversion. The image is processed locally as part of an asynchronous backend job; no image data is sent to a third-party service.
+
+### Upscaling
+
+**[Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) x2plus** — used for 2× upscaling.
+**Real-ESRGAN x4plus** — used for 4× upscaling.
+
+4× upscaling uses the dedicated `RealESRGAN_x4plus` model rather than chaining the 2× model twice. Large inputs are processed in overlapping tiles to bound memory usage.
+
+Model provenance and exact source files are documented in [`DECISIONS.md`](./DECISIONS.md). Repix does not claim any output-quality superiority beyond what these upstream projects document — results depend on the source image.
+
+## Privacy by Design
+
+- No user accounts, no login, no sessions tied to identity.
+- Uploaded images and generated results are written to a per-job temporary directory and are not permanently stored.
+- There is no persistent image gallery or history.
+- Temporary job files are deleted after the job's result is downloaded, and independently by a background cleanup process once a job exceeds its configured TTL (`JOB_TTL_MINUTES`) — whichever happens first.
+- Refreshing or reopening the app always starts a clean session; no image state is kept in `localStorage`, `sessionStorage`, or a database.
+- Images are processed locally by the backend's ONNX Runtime engines — they are never sent to an external AI API.
+
+This describes what the current implementation does. It is not a compliance or legal guarantee.
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    A[Browser] --> B[React / TypeScript]
+    B --> C[FastAPI]
+    C --> D[Job Processor]
+    D --> E[Pillow / OpenCV]
+    D --> F[DDColor-Tiny]
+    D --> G[Real-ESRGAN]
+    F --> H[ONNX Runtime]
+    G --> H
+    H --> I[CPU]
 ```
-Browser (React + TS + Vite + Tailwind)
-        │ HTTP (upload, poll)
-        ▼
-FastAPI backend  ──►  JobManager (thread pool, MAX_AI_WORKERS)
-        │
-        ├─ Pillow/OpenCV  (validation, EXIF, Lab conversion)
-        ├─ DDColorEngine    (ONNX Runtime, CPUExecutionProvider)
-        └─ RealESRGANEngine (ONNX Runtime, CPUExecutionProvider, tiled)
+
+The frontend handles upload, preview, crop, and resize locally in the browser — these operations never touch the backend. Colorization and upscaling are submitted as jobs to the FastAPI backend, which queues them on a bounded worker pool and runs inference through ONNX Runtime. The frontend polls job status and downloads the result once it's ready. All job data lives under a temporary, per-job directory on the backend's filesystem and is cleaned up automatically. The whole stack is distributed as two Docker images (frontend, backend) intended for a single CPU-only host.
+
+## Tech Stack
+
+| Layer            | Technology                 |
+| ---------------- | --------------------------- |
+| Frontend         | React + TypeScript + Vite   |
+| Styling          | Tailwind CSS                |
+| Crop UI          | react-image-crop            |
+| Backend          | FastAPI                     |
+| Image processing | Pillow / OpenCV             |
+| AI inference     | ONNX Runtime (CPU)          |
+| Colorization     | DDColor-Tiny                |
+| Upscaling        | Real-ESRGAN (x2plus/x4plus) |
+| Rate limiting    | slowapi                     |
+| Containerization | Docker                      |
+| Deployment       | Linux VPS                   |
+
+## Requirements
+
+- Docker and Docker Compose
+- A Linux, macOS, or Windows host capable of running Docker
+- No GPU — all inference runs on CPU
+
+AI processing time is not fixed. It depends on CPU performance, input image resolution, the selected operation, and the upscaling factor (4× is substantially more compute-intensive than 2×). Larger images also require more RAM during inference.
+
+## Quick Start
+
+```bash
+git clone <repository-url>
+cd repix
+cp .env.example .env
+docker compose up --build
 ```
 
-Crop/resize run client-side on `<canvas>`. Colorize/upscale are asynchronous
-jobs: `POST /api/jobs` returns a `job_id` immediately, the frontend polls
-`GET /api/jobs/{id}` every ~1.5s, then downloads via
-`GET /api/jobs/{id}/download`.
+Then open:
 
-## Local development (without Docker)
+```text
+http://localhost:5173
+```
 
-Backend:
+The backend API is available separately at `http://localhost:8000` (see [`docker-compose.yml`](./docker-compose.yml)).
+
+## Development
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Runs the Vite dev server on `http://localhost:5173` and proxies `/api` requests to `http://localhost:8000`.
+
+### Backend
 
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-bash ../models/download_models.sh   # downloads pinned ONNX weights, ~270MB
+bash ../models/download_models.sh
 MODELS_DIR=../models uvicorn app.main:app --reload --port 8000
 ```
 
-Frontend:
+`models/download_models.sh` fetches and checksum-verifies the pinned ONNX weights (~270 MB) into `models/`.
+
+### Docker
 
 ```bash
-cd frontend
-npm install
-npm run dev   # proxies /api to http://localhost:8000
-```
-
-Open http://localhost:5173.
-
-## Docker (recommended)
-
-```bash
-cp .env.example .env
 docker compose up --build
 ```
 
-This builds and starts `backend` (FastAPI + ONNX Runtime, port 8000) and
-`frontend` (static build served by nginx, port 5173, proxying `/api` to
-`backend`). Model weights are downloaded during the backend image build.
-No Python/Node/ONNX/OpenCV installation is required on the host.
+Rebuilds and starts both containers using the `.env` file at the repository root.
 
-Open http://localhost:5173.
+## Configuration
 
-## Model setup
+Copy `.env.example` to `.env` before running the project:
 
-Model weights are pinned dependencies, not user data — see `models/`:
-
-```
-models/
-  ddcolor/ddcolor_tiny.onnx
-  realesrgan/realesrgan_x2plus.onnx
-  realesrgan/realesrgan_x4plus.onnx
-  CHECKSUMS.sha256
-  download_models.sh
+```bash
+cp .env.example .env
 ```
 
-Run `bash models/download_models.sh` to fetch and checksum-verify them (also
-run automatically inside `docker/backend.Dockerfile`). Sources and rationale
-for the exact exports used are documented in `DECISIONS.md`.
+| Variable               | Description                                   | Default      |
+| ---------------------- | ---------------------------------------------- | ------------ |
+| `APP_ENV`               | Application environment label                  | `production` |
+| `LOG_LEVEL`             | Log verbosity                                  | `INFO`       |
+| `MAX_UPLOAD_MB`         | Maximum upload size                            | `20`         |
+| `MAX_INPUT_WIDTH`       | Maximum accepted input width (px)              | `6000`       |
+| `MAX_INPUT_HEIGHT`      | Maximum accepted input height (px)             | `6000`       |
+| `MAX_OUTPUT_WIDTH`      | Maximum generated output width (px)            | `10000`      |
+| `MAX_OUTPUT_HEIGHT`     | Maximum generated output height (px)           | `10000`      |
+| `MAX_OUTPUT_PIXELS`     | Maximum generated output pixel count           | `50000000`   |
+| `JOB_TTL_MINUTES`       | Minutes before an unclaimed job is cleaned up   | `60`         |
+| `MAX_AI_WORKERS`        | Concurrent AI inference jobs                   | `1`          |
+| `POLL_INTERVAL_MS`      | Suggested frontend polling interval             | `1500`       |
+| `UPSCALE_TILE_SIZE`     | Tile size used for large-image upscaling (px)  | `512`        |
+| `UPSCALE_TILE_OVERLAP`  | Overlap between upscaling tiles (px)           | `16`         |
+| `RATE_LIMIT_PER_MINUTE` | Per-IP limit on job creation                   | `10`         |
 
-## Environment variables
+## Docker
 
-See `.env.example`. All limits (upload size, input/output dimensions, job
-TTL, worker concurrency, tiling) are configurable — nothing is hard-coded.
+The stack is two services, defined in [`docker-compose.yml`](./docker-compose.yml):
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `MAX_UPLOAD_MB` | 20 | Max upload size |
-| `MAX_INPUT_WIDTH` / `MAX_INPUT_HEIGHT` | 6000 | Max input image dimensions |
-| `MAX_OUTPUT_WIDTH` / `MAX_OUTPUT_HEIGHT` / `MAX_OUTPUT_PIXELS` | 10000 / 10000 / 50000000 | Max AI output size, enforced before starting a job |
-| `JOB_TTL_MINUTES` | 60 | How long job data survives before forced cleanup |
-| `MAX_AI_WORKERS` | 1 | Concurrent AI inference jobs (CPU-bound; keep low on small VPS) |
-| `UPSCALE_TILE_SIZE` / `UPSCALE_TILE_OVERLAP` | 512 / 16 | Tiling for large-image upscale to bound memory |
-| `RATE_LIMIT_PER_MINUTE` | 10 | Per-IP limit on `POST /api/jobs` |
+- **`backend`** — FastAPI + ONNX Runtime, built from [`docker/backend.Dockerfile`](./docker/backend.Dockerfile). Model weights are downloaded and checksum-verified during the image build via `models/download_models.sh`. Job data is written to a `tmpfs` mount at `/tmp/image-lab`, so it never touches a persistent volume.
+- **`frontend`** — the Vite production build served by nginx, built from [`docker/frontend.Dockerfile`](./docker/frontend.Dockerfile), proxying `/api` to the backend container.
+
+There is no persistent volume for user images in either service.
+
+```bash
+docker compose up --build   # build and start both containers
+docker compose down         # stop and remove containers
+```
 
 ## Testing
 
-Backend:
+### Backend
 
 ```bash
-cd backend && source .venv/bin/activate
+cd backend
+source .venv/bin/activate
 pip install -r requirements-dev.txt
-pytest                 # unit + API tests (fast, no model weights needed)
-# tests/test_engines.py runs against real ONNX models and is skipped
-# automatically if models/download_models.sh hasn't been run
+pytest
 ```
 
-Frontend:
+This runs unit tests (image validation, job lifecycle, cleanup) and API tests. `tests/test_engines.py` runs inference against the real ONNX models and is skipped automatically if `models/download_models.sh` hasn't been run yet.
+
+### Frontend
 
 ```bash
 cd frontend
-npm test
+npm test        # vitest
+npm run build   # type checking (tsc -b) + production build
+npm run lint    # oxlint
 ```
 
-## Production deployment
+## Project Structure
 
-The same containers run on any CPU-only Linux VPS — no NVIDIA drivers, CUDA,
-GPU, or external AI APIs required. Only `CPUExecutionProvider` is used.
-Set `.env` (especially `MAX_AI_WORKERS=1` on small VPS instances), then:
-
-```bash
-docker compose up --build -d
+```text
+repix/
+├── frontend/              React + TypeScript + Vite app
+│   └── src/
+│       ├── components/    UI components (dropzone, crop, resize, compare slider, ...)
+│       ├── services/      Job API client
+│       ├── state/         Shared types
+│       └── utils/         Client-side image utilities (crop/resize via canvas)
+├── backend/               FastAPI app
+│   ├── app/
+│   │   ├── api/           Routes (/health, /ready, /api/jobs)
+│   │   ├── core/          Config and logging
+│   │   ├── engines/       DDColor and Real-ESRGAN ONNX engines
+│   │   ├── jobs/          Job manager, storage, cleanup
+│   │   ├── models/        Job data model
+│   │   └── schemas/       Pydantic request/response schemas
+│   └── tests/
+├── models/                Pinned ONNX weights, checksums, download script
+├── docker/                Dockerfiles and nginx config
+├── docker-compose.yml
+├── .env.example
+├── DECISIONS.md           Fixed and resolved implementation decisions
+├── PRD.md                 Product/technical specification
+└── README.md
 ```
 
-## Privacy / data lifecycle
+## Deployment
 
-- No accounts, no database, no persistent image storage.
-- Uploaded images and AI results live only in `/tmp/image-lab/<job_id>` for
-  the duration of processing plus `JOB_TTL_MINUTES`, then are deleted.
-- Refreshing the page or opening a new session never restores a previous
-  image — the frontend keeps no image data in `localStorage`/`sessionStorage`.
-- Job IDs are random UUIDs, not sequential — a job cannot be enumerated or
-  guessed by another client.
-- Logs contain job id, operation, dimensions, duration, and error category
-  only — never image bytes or content.
+```text
+Linux VPS
+   ↓
+Docker Compose
+   ↓
+CPU-only inference (ONNX Runtime, CPUExecutionProvider)
+```
 
-## Troubleshooting
+Repix does not require GPU infrastructure, NVIDIA drivers, or CUDA. Actual sizing depends on expected image resolution and concurrency — `MAX_AI_WORKERS` controls how many AI jobs run at once, and should generally be kept low (`1`) on small VPS instances since upscaling is CPU- and memory-intensive.
 
-- **`/ready` returns 503`**: model weights aren't present. Run
-  `bash models/download_models.sh` (or rebuild the backend image).
-- **Upscale/colorize jobs stay `queued` for a long time**: `MAX_AI_WORKERS`
-  limits concurrency; on a 1-vCPU VPS, keep it at `1` and expect processing
-  (not queueing) to simply take longer for large images.
-- **"We couldn't process this image" error**: check backend logs — the
-  technical exception is logged server-side but never shown to the user.
-- **Large image upscale rejected before starting**: the requested output
-  would exceed `MAX_OUTPUT_WIDTH`/`HEIGHT`/`PIXELS`; pick a smaller image or
-  a lower scale factor, or raise the limits in `.env` if your VPS has the RAM.
+## Data Storage
+
+```text
+User image
+   ↓
+Temporary job directory (/tmp/image-lab/<job_id>)
+   ↓
+Processing (crop/resize client-side; colorize/upscale via ONNX Runtime)
+   ↓
+Download
+   ↓
+Cleanup (on download, or automatically after JOB_TTL_MINUTES)
+```
+
+**Persistent:** application code, Docker images, model weights, configuration.
+
+**Temporary:** uploaded images, generated results, and all per-job files — removed after download or TTL expiry, whichever comes first.
+
+## Limitations
+
+- CPU inference is slower than GPU inference, particularly for 4× upscaling.
+- Larger images require more RAM and more processing time.
+- 4× upscaling can produce very large output files.
+- Colorization is a model inference result — it is not guaranteed to reproduce historically accurate colors.
+- Output quality depends on the source image and is not guaranteed for all content types.
+
+## Roadmap
+
+Ideas under consideration, not yet implemented:
+
+- Batch processing of multiple images
+- Additional input/output formats
+- Additional enhancement models
+- Finer-grained job cancellation
+- Optional GPU execution path
+
+## Contributing
+
+1. Fork and clone the repository
+2. Create a feature branch
+3. Make your changes
+4. Run the backend and frontend test suites
+5. Open a pull request describing the change
+
+## License
+
+No license has been chosen for this repository yet.
+<!-- TODO(maintainer): add a LICENSE file and reference it here once a license is chosen. -->
+
+## Credits
+
+Repix builds on top of the following open-source models and libraries. Repix does not claim authorship of these models — see each project for its own license terms.
+
+- [DDColor](https://github.com/piddnad/DDColor) — colorization model
+- [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) — upscaling models
+- [ONNX Runtime](https://onnxruntime.ai/) — inference engine
+- [FastAPI](https://fastapi.tiangolo.com/), [Pillow](https://python-pillow.org/), [OpenCV](https://opencv.org/)
+- [React](https://react.dev/), [Vite](https://vite.dev/), [Tailwind CSS](https://tailwindcss.com/)
