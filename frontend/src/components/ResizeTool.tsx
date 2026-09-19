@@ -8,6 +8,11 @@ interface Props {
 
 const PRESETS = [25, 50, 75, 100]
 
+const presetSize = (image: EditorImage, pct: number) => ({
+  width: Math.max(1, Math.round((image.width * pct) / 100)),
+  height: Math.max(1, Math.round((image.height * pct) / 100)),
+})
+
 const parse = (s: string) => (s.trim() === '' ? NaN : Number(s))
 
 export default function ResizeTool({ image, onApply }: Props) {
@@ -29,8 +34,9 @@ export default function ResizeTool({ image, onApply }: Props) {
   }
 
   const applyPreset = (pct: number) => {
-    setWidth(String(Math.max(1, Math.round((image.width * pct) / 100))))
-    setHeight(String(Math.max(1, Math.round((image.height * pct) / 100))))
+    const size = presetSize(image, pct)
+    setWidth(String(size.width))
+    setHeight(String(size.height))
   }
 
   const w = parse(width)
@@ -38,12 +44,23 @@ export default function ResizeTool({ image, onApply }: Props) {
   const empty = Number.isNaN(w) || Number.isNaN(h)
   const outOfRange = !empty && (w < 1 || h < 1 || w > image.width || h > image.height)
   const unchanged = !empty && w === image.width && h === image.height
+  // Derived from the fields, so typing a custom size clears the highlight.
+  const activePreset = PRESETS.find((p) => {
+    const size = presetSize(image, p)
+    return size.width === w && size.height === h
+  })
 
   return (
     <div className="flex flex-col gap-4">
       <div role="group" aria-label="Scale presets" className="flex flex-wrap gap-2">
         {PRESETS.map((p) => (
-          <button key={p} type="button" onClick={() => applyPreset(p)} className="chip">
+          <button
+            key={p}
+            type="button"
+            aria-pressed={activePreset === p}
+            onClick={() => applyPreset(p)}
+            className="chip"
+          >
             {p}%
           </button>
         ))}
