@@ -19,7 +19,11 @@ Claude Code must not silently replace these.
 ## Implementation decisions (left open by the PRD, resolved here)
 
 ### Model source
-The PRD specifies exact model architectures but not a download URL. Pinned ONNX exports used:
+The PRD specifies exact model architectures but not a download URL. Pinned ONNX exports used.
+To survive upstream removals, the files are mirrored unchanged in
+[`thecyriljacob/repix-dependency-models`](https://huggingface.co/thecyriljacob/repix-dependency-models)
+(tag `v1`), which is what `models/download_models.sh` pulls from (override with `MODEL_BASE_URL`).
+The original upstream sources, for provenance:
 
 - `ddcolor_large.onnx` — from `Diogo122333/ddcolor-512-fp16` (Hugging Face), fp16 weights with
   float32 I/O boundary, fixed 512x512 input — no special handling needed since ORT executes it
@@ -34,7 +38,7 @@ The PRD specifies exact model architectures but not a download URL. Pinned ONNX 
   implementation (Section 40 of the PRD) requires.
 
 SHA-256 checksums are pinned in `models/CHECKSUMS.sha256` and verified by
-`models/download_models.sh`.
+`models/download_models.sh`, so a wrong or altered mirror is rejected.
 
 ### Job security / capability token
 Section 37 requires unguessable job IDs and a "secure per-session capability/token or

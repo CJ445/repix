@@ -100,7 +100,7 @@ if [ "$ALREADY_UP" -eq 0 ]; then
     info "Rebuilding images (--build)…"
     compose build
   elif [ "${#MISSING[@]}" -gt 0 ]; then
-    info "Image(s) not built yet: ${MISSING[*]} — building (first build downloads the AI models, ~270 MB)…"
+    info "Image(s) not built yet: ${MISSING[*]} — building (first build downloads the AI models, ~590 MB)…"
     compose build
   else
     ok "Images present (use --build to rebuild after code changes)"

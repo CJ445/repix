@@ -15,12 +15,13 @@ React · TypeScript · FastAPI · ONNX Runtime · Docker
 - Drag-and-drop image upload with instant local preview
 - Interactive crop (free, 1:1, 4:3, 3:2, 16:9)
 - Resize with locked/unlocked aspect ratio and percentage presets
+- One-click Grayscale (next to Colorize Image), applied in the browser and undoable
 - Grayscale-to-color photo colorization
 - AI upscaling at 2×
 - AI upscaling at 4× (dedicated model, not the 2× model run twice)
 - Before/after comparison slider
 - Undo, redo and revert to original (last 10 steps, Ctrl/Cmd+Z)
-- Keep an AI result and continue editing (crop, resize, colorize, upscale) from the latest version
+- Keep an AI result and continue editing (crop, resize, grayscale, colorize, upscale) from the latest version
 - Download as PNG, JPG, or WebP, with the exact file size and dimensions shown for each option
 - Asynchronous, CPU-based AI processing with job status polling
 - Responsive interface (desktop and mobile)
@@ -73,7 +74,7 @@ flowchart TD
     H --> I[CPU]
 ```
 
-The frontend handles upload, preview, crop, and resize locally in the browser — these operations never touch the backend. Colorization and upscaling are submitted as jobs to the FastAPI backend, which queues them on a bounded worker pool and runs inference through ONNX Runtime. The frontend polls job status and downloads the result once it's ready. All job data lives under a temporary, per-job directory on the backend's filesystem and is cleaned up automatically. The whole stack is distributed as two Docker images (frontend, backend) intended for a single CPU-only host.
+The frontend handles upload, preview, crop, resize, and grayscale locally in the browser — these operations never touch the backend. Colorization and upscaling are submitted as jobs to the FastAPI backend, which queues them on a bounded worker pool and runs inference through ONNX Runtime. The frontend polls job status and downloads the result once it's ready. All job data lives under a temporary, per-job directory on the backend's filesystem and is cleaned up automatically. The whole stack is distributed as two Docker images (frontend, backend) intended for a single CPU-only host.
 
 ## Tech Stack
 
@@ -139,7 +140,7 @@ bash ../models/download_models.sh
 MODELS_DIR=../models uvicorn app.main:app --reload --port 8000
 ```
 
-`models/download_models.sh` fetches and checksum-verifies the pinned ONNX weights (~270 MB) into `models/`.
+`models/download_models.sh` fetches and checksum-verifies the pinned ONNX weights (~590 MB) into `models/`. They come from the project's own Hugging Face mirror, [`thecyriljacob/repix-dependency-models`](https://huggingface.co/thecyriljacob/repix-dependency-models) (tag `v1`); set `MODEL_BASE_URL` to use a different mirror with the same layout.
 
 ### Docker
 
@@ -308,7 +309,7 @@ repix/
 │       ├── components/    UI components (dropzone, crop, resize, compare slider, ...)
 │       ├── services/      Job API client
 │       ├── state/         Shared types
-│       └── utils/         Client-side image utilities (crop/resize via canvas)
+│       └── utils/         Client-side image utilities (crop/resize/grayscale via canvas)
 ├── backend/               FastAPI app
 │   ├── app/
 │   │   ├── api/           Routes (/health, /ready, /api/jobs)
@@ -347,7 +348,7 @@ User image
    ↓
 Temporary job directory (/tmp/image-lab/<job_id>)
    ↓
-Processing (crop/resize client-side; colorize/upscale via ONNX Runtime)
+Processing (crop/resize/grayscale client-side; colorize/upscale via ONNX Runtime)
    ↓
 Download
    ↓

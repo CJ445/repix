@@ -7,6 +7,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Mirror of the pinned model files (provenance and licenses: see the repo's model card).
+# Override MODEL_BASE_URL to use another mirror with the same layout; the checksums below
+# are verified either way.
+MODEL_BASE_URL="${MODEL_BASE_URL:-https://huggingface.co/thecyriljacob/repix-dependency-models/resolve/v1}"
+
 mkdir -p ddcolor realesrgan
 
 download() {
@@ -19,14 +24,9 @@ download() {
   curl -sL --fail -o "$dest" "$url"
 }
 
-download "https://huggingface.co/Diogo122333/ddcolor-512-fp16/resolve/main/ddcolor-512-fp16.onnx" \
-  "ddcolor/ddcolor_large.onnx"
-
-download "https://huggingface.co/SceneWorks/real-esrgan-onnx/resolve/main/real_esrgan_x2.onnx" \
-  "realesrgan/realesrgan_x2plus.onnx"
-
-download "https://huggingface.co/SceneWorks/real-esrgan-onnx/resolve/main/real_esrgan_x4.onnx" \
-  "realesrgan/realesrgan_x4plus.onnx"
+for model in ddcolor/ddcolor_large.onnx realesrgan/realesrgan_x2plus.onnx realesrgan/realesrgan_x4plus.onnx; do
+  download "$MODEL_BASE_URL/$model" "$model"
+done
 
 echo "Verifying checksums..."
 sha256sum -c CHECKSUMS.sha256
